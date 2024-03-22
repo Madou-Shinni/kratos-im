@@ -2,10 +2,9 @@ package main
 
 import (
 	"flag"
-	"kratos-im/app/im/internal/server"
-	"os"
-
 	"kratos-im/app/im/internal/conf"
+	"kratos-im/pkg/rws"
+	"os"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"
@@ -31,7 +30,7 @@ func init() {
 	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
 }
 
-func newApp(logger log.Logger, ws *server.WebsocketServer) *kratos.App {
+func newApp(logger log.Logger, ws *rws.Server) *kratos.App {
 	return kratos.New(
 		kratos.ID(id),
 		kratos.Name(Name),
