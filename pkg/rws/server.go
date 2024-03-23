@@ -231,13 +231,15 @@ func (s *Server) wsHandle(w http.ResponseWriter, r *http.Request) {
 	auth, err := s.authentication.Auth(w, r)
 	if err != nil {
 		s.log.Errorf("auth failed: %v", err)
-		conn.WriteMessage(websocket.CloseInternalServerErr, websocket.FormatCloseMessage(websocket.CloseInternalServerErr, "auth failed"))
+		conn.WriteMessage(websocket.TextMessage, []byte("server busy"))
+		conn.Close()
 		return
 	}
 
 	if !auth {
 		s.log.Error("auth failed")
-		conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "auth failed"))
+		conn.WriteMessage(websocket.TextMessage, []byte("auth failed"))
+		conn.Close()
 		return
 	}
 

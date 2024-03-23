@@ -20,8 +20,8 @@ import (
 // Injectors from wire.go:
 
 // wireApp init kratos application.
-func wireApp(confServer *conf.Server, data *conf.Data, logger log.Logger) (*kratos.App, func(), error) {
-	rwsServer := server.NewWebsocketServer(confServer, logger)
+func wireApp(confServer *conf.Server, data *conf.Data, auth *conf.Auth, logger log.Logger) (*kratos.App, func(), error) {
+	rwsServer := server.NewWebsocketServer(confServer, auth, logger)
 	app := newApp(logger, rwsServer)
 	return app, func() {
 	}, nil
