@@ -29,8 +29,13 @@ message Data {
     google.protobuf.Duration read_timeout = 3;
     google.protobuf.Duration write_timeout = 4;
   }
+  message Mongo {
+    string url = 1;
+    string db = 2;
+  }
   Database database = 1;
   Redis redis = 2;
+  Mongo mongo = 3;
 }
 
 message Auth {

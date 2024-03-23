@@ -15,5 +15,8 @@ data:
     addr: 127.0.0.1:6379
     read_timeout: 0.2s
     write_timeout: 0.2s
+  mongo:
+    url: mongodb://root:123456@127.0.0.1:27017
+    db: kratos-im
 auth:
   key: secret!@#123

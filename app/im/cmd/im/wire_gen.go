@@ -9,8 +9,11 @@ package main
 import (
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"
+	"kratos-im/app/im/internal/biz"
 	"kratos-im/app/im/internal/conf"
+	"kratos-im/app/im/internal/data"
 	"kratos-im/app/im/internal/server"
+	"kratos-im/app/im/internal/service"
 )
 
 import (
@@ -20,9 +23,21 @@ import (
 // Injectors from wire.go:
 
 // wireApp init kratos application.
-func wireApp(confServer *conf.Server, data *conf.Data, auth *conf.Auth, logger log.Logger) (*kratos.App, func(), error) {
-	rwsServer := server.NewWebsocketServer(confServer, auth, logger)
+func wireApp(confServer *conf.Server, confData *conf.Data, auth *conf.Auth, logger log.Logger) (*kratos.App, func(), error) {
+	database, err := data.NewMongo(confData, logger)
+	if err != nil {
+		return nil, nil, err
+	}
+	dataData, cleanup, err := data.NewData(confData, logger, database)
+	if err != nil {
+		return nil, nil, err
+	}
+	imRepo := data.NewIMRepo(dataData, logger)
+	imUsecase := biz.NewIMUsecase(imRepo, logger)
+	imService := service.NewIMService(imUsecase)
+	rwsServer := server.NewWebsocketServer(confServer, auth, logger, imService)
 	app := newApp(logger, rwsServer)
 	return app, func() {
+		cleanup()
 	}, nil
 }

@@ -11,7 +11,7 @@ func TestGenToken(t *testing.T) {
 	token, err := GenToken(jwt.MapClaims{
 		"userId": uuid.New().String(),
 		"exp":    time.Now().Add(time.Hour * 24 * 7).Unix(),
-	})
+	}, "secret")
 	if err != nil {
 		t.Error(err)
 		return

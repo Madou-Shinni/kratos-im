@@ -71,6 +71,10 @@ func (s *Server) addConn(conn *Conn, req *http.Request) {
 }
 
 func (s *Server) handleConn(conn *Conn) {
+
+	uids := s.GetUsers(conn)
+	conn.Uid = uids[0]
+
 	for {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {

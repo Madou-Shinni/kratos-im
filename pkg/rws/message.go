@@ -5,6 +5,7 @@ type FrameType uint8
 const (
 	FrameData FrameType = 0x0
 	FramePing FrameType = 0x1
+	FrameErr  FrameType = 0x2
 )
 
 // Message is a message.
@@ -29,5 +30,13 @@ func NewMessage(method, fromId, toId string, data interface{}) *Message {
 		FromId:    fromId,
 		ToId:      toId,
 		Data:      data,
+	}
+}
+
+// NewErrMessage is a constructor of Err
+func NewErrMessage(err error) *Message {
+	return &Message{
+		FrameType: FrameErr,
+		Data:      err.Error(),
 	}
 }
