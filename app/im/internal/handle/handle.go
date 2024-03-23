@@ -1,13 +1,12 @@
 package handle
 
 import (
-	"github.com/gorilla/websocket"
 	"kratos-im/pkg/rws"
 )
 
 // OnLine 上线
 func OnLine() rws.HandleFunc {
-	return func(svr *rws.Server, conn *websocket.Conn, msg rws.Message) {
+	return func(svr *rws.Server, conn *rws.Conn, msg rws.Message) {
 		uids := svr.GetUsers()
 		myids := svr.GetUsers(conn)
 		if len(uids) == 0 {

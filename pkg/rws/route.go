@@ -1,9 +1,7 @@
 package rws
 
-import "github.com/gorilla/websocket"
-
 // HandleFunc is a handle function.
-type HandleFunc func(svr *Server, conn *websocket.Conn, msg Message)
+type HandleFunc func(svr *Server, conn *Conn, msg Message)
 
 // Route is a route.
 type Route struct {

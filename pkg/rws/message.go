@@ -1,7 +1,16 @@
 package rws
 
+type FrameType uint8
+
+const (
+	FrameData FrameType = 0x0
+	FramePing FrameType = 0x1
+)
+
 // Message is a message.
 type Message struct {
+	// 消息类型
+	FrameType FrameType `json:"frameType"`
 	// 方式
 	Method string `json:"method"`
 	// 发送者ID
@@ -15,9 +24,10 @@ type Message struct {
 // NewMessage is a constructor of Message.
 func NewMessage(method, fromId, toId string, data interface{}) *Message {
 	return &Message{
-		Method: method,
-		FromId: fromId,
-		ToId:   toId,
-		Data:   data,
+		FrameType: FrameData,
+		Method:    method,
+		FromId:    fromId,
+		ToId:      toId,
+		Data:      data,
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"kratos-im/app/im/internal/handle"
 	"kratos-im/app/im/internal/routes"
 	"kratos-im/pkg/rws"
+	"time"
 )
 
 // NewWebsocketServer creates a new websocket server.
@@ -17,6 +18,7 @@ func NewWebsocketServer(c *conf.Server, auth *conf.Auth, logger log.Logger) *rws
 		rws.WithPatten("/ws"),
 		rws.WithLogger(log.NewHelper(log.With(logger, "module", "Websocket/service/websocket-service"))),
 		rws.WithUpgrader(&websocket.Upgrader{}),
+		rws.WithMaxConnectionIdle(time.Second*10),
 		rws.WithAuthentication(handle.NewJWTAuth(func(token *jwt.Token) (interface{}, error) {
 			return []byte(auth.Key), nil
 		}, handle.WithClaims(func() jwt.Claims {

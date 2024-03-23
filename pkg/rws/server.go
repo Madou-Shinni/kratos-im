@@ -3,34 +3,36 @@ package rws
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/gorilla/websocket"
 	"net/http"
 	"sync"
+	"time"
 )
-
-type Option func(*Server)
 
 // Server is a websocket server.
 type Server struct {
-	routes         map[string]HandleFunc      // 路由
-	addr           string                     // websocket server地址
-	patten         string                     // websocket connect路由
-	authentication Authentication             // 认证
-	mutex          sync.RWMutex               // 读写锁
-	connUserMap    map[*websocket.Conn]string // 连接与用户的映射
-	userConnMap    map[string]*websocket.Conn // 用户与连接的映射
-	upgrader       *websocket.Upgrader        // websocket升级器
-	log            *log.Helper                // 日志
+	routes            map[string]HandleFunc // 路由
+	maxConnectionIdle time.Duration         // 最大连接空闲时间
+	addr              string                // websocket server地址
+	patten            string                // websocket connect路由
+	authentication    Authentication        // 认证
+	mutex             sync.RWMutex          // 读写锁
+	connUserMap       map[*Conn]string      // 连接与用户的映射
+	userConnMap       map[string]*Conn      // 用户与连接的映射
+	upgrader          *websocket.Upgrader   // websocket升级器
+	log               *log.Helper           // 日志
 }
 
 // NewServer creates a new websocket server.
 func NewServer(opts ...Option) *Server {
 	server := &Server{
-		routes:         make(map[string]HandleFunc),
-		authentication: new(DefaultAuthentication),
-		connUserMap:    make(map[*websocket.Conn]string),
-		userConnMap:    make(map[string]*websocket.Conn),
+		routes:            make(map[string]HandleFunc),
+		authentication:    new(DefaultAuthentication),
+		connUserMap:       make(map[*Conn]string),
+		userConnMap:       make(map[string]*Conn),
+		maxConnectionIdle: defaultMaxConnectionIdle,
 	}
 
 	// 遍历所有的选项，并应用到Server结构体
@@ -39,41 +41,6 @@ func NewServer(opts ...Option) *Server {
 	}
 
 	return server
-}
-
-// WithAddr with server address.
-func WithAddr(addr string) Option {
-	return func(s *Server) {
-		s.addr = addr
-	}
-}
-
-// WithUpgrader with websocket upgrader.
-func WithUpgrader(upgrader *websocket.Upgrader) Option {
-	return func(s *Server) {
-		s.upgrader = upgrader
-	}
-}
-
-// WithLogger with logger.
-func WithLogger(logger *log.Helper) Option {
-	return func(s *Server) {
-		s.log = logger
-	}
-}
-
-// WithAuthentication with authentication.
-func WithAuthentication(authentication Authentication) Option {
-	return func(s *Server) {
-		s.authentication = authentication
-	}
-}
-
-// WithPatten with patten.
-func WithPatten(patten string) Option {
-	return func(s *Server) {
-		s.patten = patten
-	}
 }
 
 // AddRoutes add routes.
@@ -87,17 +54,23 @@ func (s *Server) AddRoutes(routes []Route) {
 }
 
 // addConn .
-func (s *Server) addConn(conn *websocket.Conn, req *http.Request) {
+func (s *Server) addConn(conn *Conn, req *http.Request) {
 	uid := s.authentication.UserId(req)
 
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
+	// 验证是否已经存在
+	if c, ok := s.userConnMap[uid]; ok {
+		// 关闭旧连接
+		c.Close()
+	}
+
 	s.connUserMap[conn] = uid
 	s.userConnMap[uid] = conn
 }
 
-func (s *Server) handleConn(conn *websocket.Conn) {
+func (s *Server) handleConn(conn *Conn) {
 	for {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
@@ -114,36 +87,42 @@ func (s *Server) handleConn(conn *websocket.Conn) {
 		}
 
 		// 根据消息类型，调用不同的处理函数
-		if handle, ok := s.routes[message.Method]; ok {
-			handle(s, conn, message)
-		} else {
-			s.log.Errorf("method not found: %s", message.Method)
+		switch message.FrameType {
+		case FramePing:
+			// 心跳
+			s.SendByConns(&Message{FrameType: FramePing}, conn)
+		case FrameData:
+			if handle, ok := s.routes[message.Method]; ok {
+				handle(s, conn, message)
+			} else {
+				s.log.Errorf("method not found: %s", message.Method)
+			}
 		}
 
 	}
 }
 
-func (s *Server) GetConn(uid string) *websocket.Conn {
+func (s *Server) GetConn(uid string) *Conn {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
 	return s.userConnMap[uid]
 }
 
-func (s *Server) GetConns(uids ...string) []*websocket.Conn {
+func (s *Server) GetConns(uids ...string) []*Conn {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
-	var res []*websocket.Conn
+	var res []*Conn
 	if len(uids) == 0 {
 		// 获取全部
-		res = make([]*websocket.Conn, 0, len(s.userConnMap))
+		res = make([]*Conn, 0, len(s.userConnMap))
 		for _, uid := range s.userConnMap {
 			res = append(res, uid)
 		}
 	} else {
 		// 获取部分
-		res = make([]*websocket.Conn, 0, len(uids))
+		res = make([]*Conn, 0, len(uids))
 		for _, uid := range uids {
 			res = append(res, s.userConnMap[uid])
 		}
@@ -152,7 +131,7 @@ func (s *Server) GetConns(uids ...string) []*websocket.Conn {
 	return res
 }
 
-func (s *Server) GetUsers(conns ...*websocket.Conn) []string {
+func (s *Server) GetUsers(conns ...*Conn) []string {
 
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
@@ -183,7 +162,7 @@ func (s *Server) SendByUsers(msg interface{}, sendIds ...string) error {
 	return s.SendByConns(msg, s.GetConns(sendIds...)...)
 }
 
-func (s *Server) SendByConns(msg interface{}, conns ...*websocket.Conn) error {
+func (s *Server) SendByConns(msg interface{}, conns ...*Conn) error {
 	if len(conns) == 0 {
 		return nil
 	}
@@ -202,13 +181,18 @@ func (s *Server) SendByConns(msg interface{}, conns ...*websocket.Conn) error {
 	return nil
 }
 
-func (s *Server) Close(conn *websocket.Conn) {
+func (s *Server) Close(conn *Conn) {
 	conn.Close()
 
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
 	uid := s.connUserMap[conn]
+
+	if uid == "" {
+		return
+	}
+
 	delete(s.connUserMap, conn)
 	delete(s.userConnMap, uid)
 }
@@ -221,9 +205,8 @@ func (s *Server) wsHandle(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	conn, err := s.upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		s.log.Errorf("upgrade: %v", err)
+	conn := NewConn(s, w, r)
+	if conn == nil {
 		return
 	}
 
@@ -231,14 +214,13 @@ func (s *Server) wsHandle(w http.ResponseWriter, r *http.Request) {
 	auth, err := s.authentication.Auth(w, r)
 	if err != nil {
 		s.log.Errorf("auth failed: %v", err)
-		conn.WriteMessage(websocket.TextMessage, []byte("server busy"))
+		s.SendByConns(&Message{FrameType: FrameData, Data: fmt.Sprint("server busy")}, conn)
 		conn.Close()
 		return
 	}
 
 	if !auth {
-		s.log.Error("auth failed")
-		conn.WriteMessage(websocket.TextMessage, []byte("auth failed"))
+		s.SendByConns(&Message{FrameType: FrameData, Data: fmt.Sprint("auth failed")}, conn)
 		conn.Close()
 		return
 	}
@@ -258,5 +240,6 @@ func (s *Server) Start(ctx context.Context) error {
 
 // Stop stop the websocket server.
 func (s *Server) Stop(_ context.Context) error {
+	s.log.Info("websocket server stop")
 	return nil
 }
