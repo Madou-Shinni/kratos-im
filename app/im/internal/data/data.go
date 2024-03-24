@@ -2,6 +2,8 @@ package data
 
 import (
 	"context"
+	"github.com/tx7do/kratos-transport/broker"
+	"github.com/tx7do/kratos-transport/broker/kafka"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"kratos-im/app/im/internal/conf"
@@ -12,11 +14,12 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewMongo, NewIMRepo)
+var ProviderSet = wire.NewSet(NewData, NewMongo, NewIMRepo, NewMQClient)
 
 // Data .
 type Data struct {
 	mongoDatabase *mongo.Database
+	kafkaBroker   broker.Broker
 	// TODO wrapped database client
 }
 
@@ -50,4 +53,21 @@ func NewMongo(c *conf.Data, logger log.Logger) (*mongo.Database, error) {
 	database := client.Database(c.Mongo.Db)
 
 	return database, nil
+}
+
+func NewMQClient(c *conf.Data, logger log.Logger) broker.Broker {
+	log := log.NewHelper(logger)
+	b := kafka.NewBroker(
+		broker.WithAddress(c.Kafka.Brokers...),
+		broker.WithCodec("json"),
+	)
+
+	b.Init()
+
+	if err := b.Connect(); err != nil {
+		log.Errorf("cant connect to broker, skip: %v", err)
+		return nil
+	}
+
+	return b
 }

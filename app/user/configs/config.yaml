@@ -1,12 +1,10 @@
 server:
   http:
-    addr: 0.0.0.0:8000
+    addr: 0.0.0.0:10010
     timeout: 1s
   grpc:
-    addr: 0.0.0.0:9000
+    addr: 0.0.0.0:10009
     timeout: 1s
-  websocket:
-    addr: 0.0.0.0:10000
 data:
   database:
     driver: mysql
@@ -15,11 +13,8 @@ data:
     addr: 127.0.0.1:6379
     read_timeout: 0.2s
     write_timeout: 0.2s
-  mongo:
-    url: mongodb://root:123456@127.0.0.1:27017
-    db: kratos-im
-  kafka:
-    brokers:
-      - 127.0.0.1:9092
+    password: ""
+    db: 0
 auth:
   key: secret!@#123
+  expire: 604800

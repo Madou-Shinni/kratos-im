@@ -6,6 +6,7 @@ import (
 	"github.com/tx7do/kratos-transport/transport/kafka"
 	"kratos-im/app/jobs/internal/conf"
 	"kratos-im/app/jobs/internal/service"
+	"kratos-im/constants"
 )
 
 func NewKafkaServer(c *conf.Data, logger log.Logger, s *service.ConsumerService) *kafka.Server {
@@ -24,7 +25,7 @@ func NewKafkaServer(c *conf.Data, logger log.Logger, s *service.ConsumerService)
 
 func register(svr *kafka.Server, svc *service.ConsumerService, ctx context.Context, log *log.Helper) {
 	var err error
-	err = kafka.RegisterSubscriber(svr, ctx, "msgChatTransfer", "kafka", false, svc.HandleMsgTransfer)
+	err = kafka.RegisterSubscriber(svr, ctx, constants.TopicMsgTransfer, "kafka", false, svc.HandleMsgTransfer)
 	if err != nil {
 		goto Err
 	}

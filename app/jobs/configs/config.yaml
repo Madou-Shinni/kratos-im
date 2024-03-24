@@ -16,3 +16,9 @@ data:
   kafka:
     brokers:
       - 127.0.0.1:9092
+  mongo:
+    url: mongodb://root:123456@127.0.0.1:27017
+    db: kratos-im
+  ws:
+    host: 127.0.0.1:10090
+    patten: /ws

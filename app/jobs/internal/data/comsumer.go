@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"kratos-im/model"
 
 	"kratos-im/app/jobs/internal/biz"
 
@@ -21,22 +22,10 @@ func NewConsumerRepo(data *Data, logger log.Logger) biz.ConsumerRepo {
 	}
 }
 
-func (r *consumerRepo) Save(ctx context.Context, g *biz.Consumer) (*biz.Consumer, error) {
-	return g, nil
-}
-
-func (r *consumerRepo) Update(ctx context.Context, g *biz.Consumer) (*biz.Consumer, error) {
-	return g, nil
-}
-
-func (r *consumerRepo) FindByID(context.Context, int64) (*biz.Consumer, error) {
-	return nil, nil
-}
-
-func (r *consumerRepo) ListByHello(context.Context, string) ([]*biz.Consumer, error) {
-	return nil, nil
-}
-
-func (r *consumerRepo) ListAll(context.Context) ([]*biz.Consumer, error) {
-	return nil, nil
+func (r *consumerRepo) Save(ctx context.Context, chatLog model.ChatLog) error {
+	_, err := r.data.mongoDatabase.Collection(chatLog.Collection()).InsertOne(ctx, chatLog)
+	if err != nil {
+		return err
+	}
+	return nil
 }

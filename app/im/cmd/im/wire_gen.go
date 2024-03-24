@@ -34,7 +34,8 @@ func wireApp(confServer *conf.Server, confData *conf.Data, auth *conf.Auth, logg
 	}
 	imRepo := data.NewIMRepo(dataData, logger)
 	imUsecase := biz.NewIMUsecase(imRepo, logger)
-	imService := service.NewIMService(imUsecase)
+	broker := data.NewMQClient(confData, logger)
+	imService := service.NewIMService(imUsecase, broker)
 	rwsServer := server.NewWebsocketServer(confServer, auth, logger, imService)
 	app := newApp(logger, rwsServer)
 	return app, func() {

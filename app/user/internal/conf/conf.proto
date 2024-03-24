@@ -1,7 +1,7 @@
 syntax = "proto3";
 package kratos.api;
 
-option go_package = "kratos-im/app/im/internal/conf;conf";
+option go_package = "kratos-im/app/user/internal/conf;conf";
 
 import "google/protobuf/duration.proto";
 
@@ -12,10 +12,18 @@ message Bootstrap {
 }
 
 message Server {
-  message WebSocket {
-    string addr = 1;
+  message HTTP {
+    string network = 1;
+    string addr = 2;
+    google.protobuf.Duration timeout = 3;
   }
-  WebSocket websocket = 3;
+  message GRPC {
+    string network = 1;
+    string addr = 2;
+    google.protobuf.Duration timeout = 3;
+  }
+  HTTP http = 1;
+  GRPC grpc = 2;
 }
 
 message Data {
@@ -28,20 +36,14 @@ message Data {
     string addr = 2;
     google.protobuf.Duration read_timeout = 3;
     google.protobuf.Duration write_timeout = 4;
-  }
-  message Mongo {
-    string url = 1;
-    string db = 2;
-  }
-  message Kafka {
-    repeated string brokers = 1;
+    string password = 5;
+    int64 db = 6;
   }
   Database database = 1;
   Redis redis = 2;
-  Mongo mongo = 3;
-  Kafka kafka = 4;
 }
 
 message Auth {
   string key = 1;
+  uint64 expire = 2;
 }

@@ -10,5 +10,6 @@ func RegisterIMWebsocketServer(srv *rws.Server, s *service.IMService) {
 	srv.AddRoutes([]rws.Route{
 		{Method: "user.online", Handle: handle.OnLine(s)},
 		{Method: "user.chat", Handle: handle.Chat(s)},
+		{Method: "push", Handle: handle.Push(s)},
 	})
 }

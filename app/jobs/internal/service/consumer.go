@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/tx7do/kratos-transport/broker"
+	"kratos-im/pkg/rws"
 
 	"kratos-im/app/jobs/internal/biz"
 )
@@ -18,6 +19,6 @@ func NewConsumerService(uc *biz.ConsumerUsecase) *ConsumerService {
 }
 
 // HandleMsgTransfer implements the ConsumerService.
-func (s *ConsumerService) HandleMsgTransfer(ctx context.Context, topic string, headers broker.Headers, msg *string) error {
+func (s *ConsumerService) HandleMsgTransfer(ctx context.Context, topic string, headers broker.Headers, msg *rws.MsgChatTransfer) error {
 	return s.uc.HandleMsgTransfer(ctx, topic, headers, msg)
 }

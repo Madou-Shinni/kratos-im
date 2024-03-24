@@ -10,8 +10,8 @@ import (
 func TestGenToken(t *testing.T) {
 	token, err := GenToken(jwt.MapClaims{
 		"userId": uuid.New().String(),
-		"exp":    time.Now().Add(time.Hour * 24 * 7).Unix(),
-	}, "secret")
+	}, time.Hour*24*7,
+		"tkP2yq!i=oamTR#oQ:8n")
 	if err != nil {
 		t.Error(err)
 		return

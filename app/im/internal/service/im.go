@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/tx7do/kratos-transport/broker"
 	"kratos-im/app/im/internal/biz"
 	"kratos-im/pkg/rws"
 	"kratos-im/pkg/tools"
@@ -10,12 +11,16 @@ import (
 
 // IMService is a greeter service.
 type IMService struct {
-	uc *biz.IMUsecase
+	uc          *biz.IMUsecase
+	KafkaBroker broker.Broker
 }
 
 // NewIMService new a greeter service.
-func NewIMService(uc *biz.IMUsecase) *IMService {
-	return &IMService{uc: uc}
+func NewIMService(uc *biz.IMUsecase, kafkaBroker broker.Broker) *IMService {
+	return &IMService{
+		uc:          uc,
+		KafkaBroker: kafkaBroker,
+	}
 }
 
 // CreateChatLog 创建私聊消息

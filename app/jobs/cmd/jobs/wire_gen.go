@@ -24,12 +24,21 @@ import (
 
 // wireApp init kratos application.
 func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*kratos.App, func(), error) {
-	dataData, cleanup, err := data.NewData(confData, logger)
+	cmdable := data.NewRedis(confData, logger)
+	client, err := data.NewMongo(confData, logger)
+	if err != nil {
+		return nil, nil, err
+	}
+	iClient, err := data.NewWsClient(confData, logger, cmdable)
+	if err != nil {
+		return nil, nil, err
+	}
+	dataData, cleanup, err := data.NewData(confData, logger, cmdable, client, iClient)
 	if err != nil {
 		return nil, nil, err
 	}
 	consumerRepo := data.NewConsumerRepo(dataData, logger)
-	consumerUsecase := biz.NewConsumerUsecase(consumerRepo, logger)
+	consumerUsecase := biz.NewConsumerUsecase(consumerRepo, logger, iClient)
 	consumerService := service.NewConsumerService(consumerUsecase)
 	kafkaServer := server.NewKafkaServer(confData, logger, consumerService)
 	app := newApp(logger, kafkaServer)
