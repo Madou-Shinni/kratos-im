@@ -1,15 +1,21 @@
 package rws
 
+import "time"
+
 type FrameType uint8
 
 const (
-	FrameData FrameType = 0x0
-	FramePing FrameType = 0x1
-	FrameErr  FrameType = 0x2
+	FrameData    FrameType = 0x0
+	FramePing    FrameType = 0x1
+	FrameAck     FrameType = 0x2
+	FrameAckNone FrameType = 0x3
+	FrameErr     FrameType = 0x9
 )
 
 // Message is a message.
 type Message struct {
+	// 消息ID
+	Id string `json:"id"`
 	// 消息类型
 	FrameType FrameType `json:"frameType"`
 	// 方式
@@ -19,7 +25,10 @@ type Message struct {
 	// 接受者ID
 	ToId string `json:"toId"`
 	// 消息内容
-	Data interface{} `json:"data"`
+	Data     interface{} `json:"data"`
+	AckSeq   uint64      `json:"ackSeq"`
+	ackTime  time.Time   `json:"ackTime"`  // 发送ack时间
+	errCount int         `json:"errCount"` // 错误次数
 }
 
 // NewMessage is a constructor of Message.

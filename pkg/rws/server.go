@@ -11,6 +11,27 @@ import (
 	"time"
 )
 
+type AckType int
+
+const (
+	AckTypeNone  AckType = iota // 无需回复
+	AckTypeOnly                 // 只回复
+	AckTypeRigor                // 严格回复
+)
+
+func (t AckType) ToString() string {
+	switch t {
+	case AckTypeNone:
+		return "None"
+	case AckTypeOnly:
+		return "Only"
+	case AckTypeRigor:
+		return "Rigor"
+	}
+
+	return "None"
+}
+
 // Server is a websocket server.
 type Server struct {
 	routes            map[string]HandleFunc // 路由
@@ -23,6 +44,9 @@ type Server struct {
 	userConnMap       map[string]*Conn      // 用户与连接的映射
 	upgrader          *websocket.Upgrader   // websocket升级器
 	log               *log.Helper           // 日志
+	ack               AckType               // 是否需要回复
+	ackTimeout        time.Duration         // 回复超时时间
+	sendErrCount      int                   // 发送错误次数
 }
 
 // NewServer creates a new websocket server.
@@ -33,6 +57,8 @@ func NewServer(opts ...Option) *Server {
 		connUserMap:       make(map[*Conn]string),
 		userConnMap:       make(map[string]*Conn),
 		maxConnectionIdle: defaultMaxConnectionIdle,
+		ackTimeout:        defaultAckTimeout,
+		patten:            "/ws",
 	}
 
 	// 遍历所有的选项，并应用到Server结构体
@@ -75,6 +101,14 @@ func (s *Server) handleConn(conn *Conn) {
 	uids := s.GetUsers(conn)
 	conn.Uid = uids[0]
 
+	// 处理任务
+	go s.handleWrite(conn)
+
+	// 判断是否需要ack
+	if s.isAck(nil) {
+		go s.readAck(conn)
+	}
+
 	for {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
@@ -90,19 +124,154 @@ func (s *Server) handleConn(conn *Conn) {
 			return
 		}
 
-		// 根据消息类型，调用不同的处理函数
-		switch message.FrameType {
-		case FramePing:
-			// 心跳
-			s.SendByConns(&Message{FrameType: FramePing}, conn)
-		case FrameData:
-			if handle, ok := s.routes[message.Method]; ok {
-				handle(s, conn, message)
-			} else {
-				s.log.Errorf("method not found: %s", message.Method)
-			}
+		// 根据消息进行处理
+		if s.isAck(&message) {
+			s.log.Infof("ack message: %v", message)
+			conn.appendMsgToQueue(&message)
+		} else {
+			conn.messageCh <- &message
 		}
 
+	}
+}
+
+func (s *Server) isAck(message *Message) bool {
+	if message == nil {
+		return s.ack != AckTypeNone
+	}
+	return s.ack != AckTypeNone && message.FrameType != FrameAckNone
+}
+
+func (s *Server) readAck(conn *Conn) {
+	// 记录ack失败的次数再处理
+	send := func(msg *Message, conn *Conn) error {
+		err := s.SendByConns(msg, conn)
+		if err == nil {
+			return nil
+		}
+
+		s.log.Errorf("message ack OnlyAck send err %v message %v", err, msg)
+		conn.readMessages[0].errCount++
+		conn.messageMu.Unlock()
+
+		tempDelay := time.Duration(200*conn.readMessages[0].errCount) * time.Microsecond
+		if max := 1 * time.Second; tempDelay > max {
+			tempDelay = max
+		}
+
+		time.Sleep(tempDelay)
+		return err
+	}
+
+	for {
+		select {
+		case <-conn.done:
+			s.log.Infof("conn done ack uid:%s", conn.Uid)
+			return
+		default:
+		}
+
+		// 从队列中读取消息
+		conn.messageMu.Lock()
+		if len(conn.readMessages) == 0 {
+			conn.messageMu.Unlock()
+			// 等待，让主任务更好地切换
+			time.Sleep(100 * time.Millisecond)
+			continue
+		}
+
+		// 读取第一条消息
+		message := conn.readMessages[0]
+		if message.errCount > s.sendErrCount {
+			s.log.Infof("conn send fail, message %v, ackType %v, maxSendErrCount %v", message, s.ack.ToString(), s.sendErrCount)
+			conn.messageMu.Unlock()
+			// 因为发送消息多次错误，而选择放弃消息
+			delete(conn.readMessageSeq, message.Id)
+			conn.readMessages = conn.readMessages[1:]
+			continue
+		}
+
+		// 判断ack的方式
+		switch s.ack {
+		case AckTypeOnly:
+			// 只回复
+			send(&Message{FrameType: FrameAck, Id: message.Id, AckSeq: message.AckSeq + 1}, conn)
+			// 业务处理
+			// 从队列中删除
+			conn.readMessages = conn.readMessages[1:]
+			conn.messageMu.Unlock()
+			conn.messageCh <- message
+		case AckTypeRigor:
+			// 严格回复
+			// 回复
+			if message.AckSeq == 0 {
+				// 第一次ack
+				conn.readMessages[0].AckSeq++
+				conn.readMessages[0].ackTime = time.Now()
+				send(&Message{FrameType: FrameAck, Id: message.Id, AckSeq: message.AckSeq}, conn)
+				s.log.Infof("ack message Rigor send mid: %v, seq: %v, time: %v", message.Id, message.AckSeq, message.ackTime)
+				conn.messageMu.Unlock()
+				// 重发间隔
+				time.Sleep(3 * time.Second)
+				continue
+			}
+
+			// 验证
+			// 1. 客户端返回结果，再一次确认
+			msgSeq := conn.readMessageSeq[message.Id].AckSeq
+			if msgSeq > message.AckSeq {
+				// 确认
+				conn.readMessages = conn.readMessages[1:]
+				conn.messageMu.Unlock()
+				conn.messageCh <- message
+				s.log.Infof("ack message Rigor success send mid: %v", message.Id)
+				continue
+			}
+			// 2. 客户端没有返回结果，是否超过超时时间
+			val := s.ackTimeout - time.Since(message.ackTime)
+			if !message.ackTime.IsZero() && val <= 0 {
+				// 超时,删除
+				s.log.Infof("ack message Rigor timeout send mid: %v", message.Id)
+				delete(conn.readMessageSeq, message.Id)
+				conn.readMessages = conn.readMessages[1:]
+				conn.messageMu.Unlock()
+				continue
+			}
+			// 未超时，重发
+			conn.messageMu.Unlock()
+			s.log.Infof("ack message Rigor resend mid: %v", message.Id)
+			send(&Message{FrameType: FrameAck, Id: message.Id, AckSeq: message.AckSeq}, conn)
+			// 重发间隔
+			time.Sleep(3 * time.Second)
+		}
+	}
+}
+
+func (s *Server) handleWrite(conn *Conn) {
+	for {
+		select {
+		case <-conn.done:
+			return
+		case message := <-conn.messageCh:
+			// 根据消息类型，调用不同的处理函数
+			switch message.FrameType {
+			case FramePing:
+				// 心跳
+				s.SendByConns(&Message{FrameType: FramePing}, conn)
+			case FrameData:
+				if handle, ok := s.routes[message.Method]; ok {
+					handle(s, conn, *message)
+				} else {
+					s.log.Errorf("method not found: %s", message.Method)
+				}
+			}
+			if s.isAck(message) {
+				// 删除队列中的消息
+				conn.messageMu.Lock()
+				delete(conn.readMessageSeq, message.Id)
+				conn.messageMu.Unlock()
+			}
+		}
 	}
 }
 

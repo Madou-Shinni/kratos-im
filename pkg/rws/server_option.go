@@ -49,3 +49,24 @@ func WithMaxConnectionIdle(maxConnectionIdle time.Duration) Option {
 		s.maxConnectionIdle = maxConnectionIdle
 	}
 }
+
+// WithAck with ack type.
+func WithAck(ack AckType) Option {
+	return func(s *Server) {
+		s.ack = ack
+	}
+}
+
+// WithAckTimeout with ack timeout.
+func WithAckTimeout(ackTimeout time.Duration) Option {
+	return func(s *Server) {
+		s.ackTimeout = ackTimeout
+	}
+}
+
+// WithSendErrCount with send error count.
+func WithSendErrCount(sendErrCount int) Option {
+	return func(s *Server) {
+		s.sendErrCount = sendErrCount
+	}
+}
