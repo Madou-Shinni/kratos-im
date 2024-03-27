@@ -6,6 +6,7 @@ import (
 	"kratos-im/app/im/internal/service"
 	"kratos-im/constants"
 	"kratos-im/pkg/rws"
+	"time"
 )
 
 // OnLine 上线
@@ -58,7 +59,7 @@ func Chat(s *service.IMService) rws.HandleFunc {
 			RecvId:         data.RecvId,
 			MType:          data.MType,
 			Content:        data.Content,
-			SendTime:       0,
+			SendTime:       time.Now().UnixNano(),
 		})
 		if err != nil {
 			svr.SendByConns(rws.NewErrMessage(err), conn)

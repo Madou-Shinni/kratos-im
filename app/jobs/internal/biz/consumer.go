@@ -11,6 +11,7 @@ import (
 // ConsumerRepo is a Greater repo.
 type ConsumerRepo interface {
 	Save(ctx context.Context, chatLog model.ChatLog) error
+	UpdateMsg(ctx context.Context, chatLog *model.ChatLog) error
 }
 
 // ConsumerUsecase is a Consumer usecase.
@@ -26,8 +27,7 @@ func NewConsumerUsecase(repo ConsumerRepo, logger log.Logger, wsClient rws.IClie
 }
 
 func (u ConsumerUsecase) HandleMsgTransfer(ctx context.Context, topic string, headers broker.Headers, msg *rws.MsgChatTransfer) error {
-	// 保存数据
-	err := u.repo.Save(ctx, model.ChatLog{
+	chatLog := model.ChatLog{
 		ConversationId: msg.ConversationId,
 		SendId:         msg.SendId,
 		RecvId:         msg.RecvId,
@@ -36,9 +36,19 @@ func (u ConsumerUsecase) HandleMsgTransfer(ctx context.Context, topic string, he
 		MsgContent:     msg.Content,
 		SendTime:       msg.SendTime,
 		Status:         0,
-	})
+	}
+
+	// 保存数据
+	err := u.repo.Save(ctx, chatLog)
 	if err != nil {
 		u.log.Errorf("HandleMsgTransfer Save: %v", err)
+		return err
+	}
+
+	// 更新会话
+	err = u.repo.UpdateMsg(ctx, &chatLog)
+	if err != nil {
+		u.log.Errorf("HandleMsgTransfer UpdateMsg: %v", err)
 		return err
 	}
 

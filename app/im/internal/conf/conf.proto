@@ -15,6 +15,12 @@ message Server {
   message WebSocket {
     string addr = 1;
   }
+  message GRPC {
+    string network = 1;
+    string addr = 2;
+    google.protobuf.Duration timeout = 3;
+  }
+  GRPC grpc = 2;
   WebSocket websocket = 3;
 }
 

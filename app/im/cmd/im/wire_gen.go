@@ -37,7 +37,8 @@ func wireApp(confServer *conf.Server, confData *conf.Data, auth *conf.Auth, logg
 	broker := data.NewMQClient(confData, logger)
 	imService := service.NewIMService(imUsecase, broker)
 	rwsServer := server.NewWebsocketServer(confServer, auth, logger, imService)
-	app := newApp(logger, rwsServer)
+	grpcServer := server.NewGRPCServer(confServer, imService, logger)
+	app := newApp(logger, rwsServer, grpcServer)
 	return app, func() {
 		cleanup()
 	}, nil
