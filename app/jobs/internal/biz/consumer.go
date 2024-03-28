@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/tx7do/kratos-transport/broker"
+	"kratos-im/constants"
 	"kratos-im/model"
 	"kratos-im/pkg/rws"
 )
@@ -26,12 +27,13 @@ func NewConsumerUsecase(repo ConsumerRepo, logger log.Logger, wsClient rws.IClie
 	return &ConsumerUsecase{repo: repo, log: log.NewHelper(logger), wsClient: wsClient}
 }
 
-func (u ConsumerUsecase) HandleMsgTransfer(ctx context.Context, topic string, headers broker.Headers, msg *rws.MsgChatTransfer) error {
+func (u *ConsumerUsecase) HandleMsgTransfer(ctx context.Context, topic string, headers broker.Headers, msg *rws.MsgChatTransfer) error {
 	chatLog := model.ChatLog{
 		ConversationId: msg.ConversationId,
 		SendId:         msg.SendId,
 		RecvId:         msg.RecvId,
 		MsgFrom:        0,
+		ChatType:       msg.ChatType,
 		MsgType:        msg.MType,
 		MsgContent:     msg.Content,
 		SendTime:       msg.SendTime,
@@ -53,17 +55,30 @@ func (u ConsumerUsecase) HandleMsgTransfer(ctx context.Context, topic string, he
 	}
 
 	// 推送消息(推送给 ws server)
-	err = u.wsClient.Send(rws.Message{
-		FrameType: rws.FrameData,
-		Method:    "push",
-		//FromId:    constants.SystemRootUid,
-		//ToId:      "",
-		Data: *msg,
-	})
+	switch chatLog.ChatType {
+	case constants.ChatTypeSingle:
+		u.sendSingle(msg)
+	case constants.ChatTypeGroup:
+		u.sendGroup()
+	}
 	if err != nil {
 		u.log.Errorf("HandleMsgTransfer Send: %v", err)
 		return err
 	}
 
 	return nil
+}
+
+func (u *ConsumerUsecase) sendSingle(data *rws.MsgChatTransfer) error {
+	return u.wsClient.Send(rws.Message{
+		FrameType: rws.FrameData,
+		Method:    "push",
+		FromId:    constants.SystemRootUid,
+		//ToId:      "",
+		Data: data,
+	})
+}
+
+func (u *ConsumerUsecase) sendGroup() {
+	// TODO: 查询群用户
 }

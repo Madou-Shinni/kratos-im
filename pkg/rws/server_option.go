@@ -70,3 +70,10 @@ func WithSendErrCount(sendErrCount int) Option {
 		s.sendErrCount = sendErrCount
 	}
 }
+
+// WithConcurrentCount with concurrent count.
+func WithConcurrentCount(concurrentCount int) Option {
+	return func(s *Server) {
+		s.concurrentCount = concurrentCount
+	}
+}

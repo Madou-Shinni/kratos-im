@@ -162,6 +162,40 @@ func (uc *IMUsecase) PutConversations(ctx context.Context, req *pb.PutConversati
 	return &pb.PutConversationsResp{}, nil
 }
 
+func (uc *IMUsecase) CreateGroupConversation(ctx context.Context, req *pb.CreateGroupConversationReq) (*pb.CreateGroupConversationResp, error) {
+	res := &pb.CreateGroupConversationResp{}
+	// 查询会话是否存在
+	_, err := uc.repo.FindConversationOne(ctx, req.GroupId)
+	if err == nil {
+		return res, nil
+	}
+
+	if !errors.Is(err, mongo.ErrNoDocuments) {
+		return nil, err
+	}
+
+	// 添加群会话
+	err = uc.repo.CreateConversation(ctx, model.Conversation{
+		ConversationId: req.GroupId,
+		ChatType:       constants.ChatTypeGroup,
+		Total:          0,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = uc.SetUpUserConversation(ctx, &pb.SetUpUserConversationReq{
+		SendId:   req.CreateId,
+		RecvId:   req.GroupId,
+		ChatType: int32(constants.ChatTypeGroup),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
 func (uc *IMUsecase) SetUpUserConversation(ctx context.Context, req *pb.SetUpUserConversationReq) (*pb.SetUpUserConversationResp, error) {
 	switch constants.ChatType(req.ChatType) {
 	case constants.ChatTypeSingle: // 单聊
@@ -192,6 +226,11 @@ func (uc *IMUsecase) SetUpUserConversation(ctx context.Context, req *pb.SetUpUse
 			return nil, err
 		}
 		err = uc.setUpUserConversation(ctx, conversationId, req.RecvId, req.SendId, constants.ChatTypeSingle, false) // 接收方不显示会话
+		if err != nil {
+			return nil, err
+		}
+	case constants.ChatTypeGroup: // 群聊
+		err := uc.setUpUserConversation(ctx, req.RecvId, req.SendId, req.SendId, constants.ChatTypeSingle, false) // 接收方不显示会话
 		if err != nil {
 			return nil, err
 		}

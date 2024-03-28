@@ -11,6 +11,8 @@ type MsgChatTransfer struct {
 	SendId string `json:"sendId"`
 	// 接受者ID
 	RecvId string `json:"recvId"`
+	// 接受群体
+	RecvIds []string `json:"recvIds"`
 	// 消息体
 	// 消息类型
 	constants.MType `json:"msgType"`

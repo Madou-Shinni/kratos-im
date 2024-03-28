@@ -11,4 +11,5 @@ const (
 
 	defaultMaxConnectionIdle = infinity
 	defaultAckTimeout        = 30 * time.Second
+	defaultConcurrentCount   = 10
 )

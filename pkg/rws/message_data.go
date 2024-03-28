@@ -34,6 +34,8 @@ type (
 		SendId string `mapstructure:"sendId"`
 		// 接受者ID
 		RecvId string `mapstructure:"recvId"`
+		// 接受者群体(群聊)
+		RecvIds []string `mapstructure:"recvIds"`
 		// 消息体
 		// 消息类型
 		constants.MType `mapstructure:"msgType"`

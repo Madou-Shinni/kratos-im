@@ -6,6 +6,7 @@ import (
 	"kratos-im/app/im/internal/service"
 	"kratos-im/constants"
 	"kratos-im/pkg/rws"
+	"kratos-im/pkg/tools"
 	"time"
 )
 
@@ -27,7 +28,7 @@ func OnLine(s *service.IMService) rws.HandleFunc {
 	}
 }
 
-// Chat 私聊
+// Chat 聊天
 func Chat(s *service.IMService) rws.HandleFunc {
 	return func(svr *rws.Server, conn *rws.Conn, msg rws.Message) {
 		var data rws.Chat
@@ -35,21 +36,15 @@ func Chat(s *service.IMService) rws.HandleFunc {
 			svr.SendByConns(rws.NewErrMessage(err), conn)
 			return
 		}
-		//// 保存聊天记录
-		//err := s.CreateChatLog(context.Background(), &data, conn.Uid)
-		//if err != nil {
-		//	svr.SendByConns(rws.NewErrMessage(err), conn)
-		//	return
-		//}
-		//// 发送给对方
-		//svr.SendByUsers(rws.NewMessage("chat", conn.Uid, data.RecvId, rws.Chat{
-		//	ConversationId: data.ConversationId,
-		//	ChatType:       data.ChatType,
-		//	SendId:         conn.Uid,
-		//	RecvId:         data.RecvId,
-		//	Msg:            data.Msg,
-		//	SendTime:       time.Now().UnixMilli(),
-		//}), data.RecvId)
+
+		if data.ConversationId == "" {
+			switch data.ChatType {
+			case constants.ChatTypeSingle:
+				data.ConversationId = tools.CombineId(conn.Uid, data.RecvId)
+			case constants.ChatTypeGroup:
+				data.ConversationId = data.RecvId
+			}
+		}
 
 		// 基于kafka的异步消息处理
 		err := s.KafkaBroker.Publish(context.Background(), constants.TopicMsgTransfer, rws.MsgChatTransfer{
@@ -77,22 +72,43 @@ func Push(s *service.IMService) rws.HandleFunc {
 			return
 		}
 		// 发送消息
-		recvid := svr.GetConn(data.RecvId)
-		if recvid == nil {
-			// TODO: 对方不在线
-
-			return
+		switch data.ChatType {
+		case constants.ChatTypeSingle: // 私聊
+			pushSingle(svr, data, data.RecvId)
+		case constants.ChatTypeGroup: // 群聊
+			pushGroup(svr, data)
 		}
-
-		// 发送给对方
-		svr.SendByConns(rws.NewMessage("push", conn.Uid, data.RecvId, rws.Chat{
-			ConversationId: data.ConversationId,
-			ChatType:       data.ChatType,
-			SendTime:       0,
-			Msg: rws.Msg{
-				MType:   data.MType,
-				Content: data.Content,
-			},
-		}), recvid)
 	}
+}
+
+// 私聊推送
+func pushSingle(svr *rws.Server, data rws.Push, recvId string) error {
+	conn := svr.GetConn(recvId)
+	if conn == nil {
+		// 对方不在线
+		return nil
+	}
+	// 发送消息
+	return svr.SendByConns(rws.NewMessage("push", data.SendId, data.RecvId, rws.Chat{
+		ConversationId: data.ConversationId,
+		ChatType:       data.ChatType,
+		SendTime:       0,
+		Msg: rws.Msg{
+			MType:   data.MType,
+			Content: data.Content,
+		},
+	}), conn)
+}
+
+// 群聊推送
+func pushGroup(svr *rws.Server, data rws.Push) error {
+	// 并发发送
+	for _, recvId := range data.RecvIds {
+		func(id string) {
+			svr.Schedule(func() {
+				pushSingle(svr, data, id)
+			})
+		}(recvId)
+	}
+	return nil
 }

@@ -47,6 +47,8 @@ type Server struct {
 	ack               AckType               // 是否需要回复
 	ackTimeout        time.Duration         // 回复超时时间
 	sendErrCount      int                   // 发送错误次数
+	concurrentCount   int                   // 并发数
+	*TaskRunner                             // 任务执行器
 }
 
 // NewServer creates a new websocket server.
@@ -59,12 +61,15 @@ func NewServer(opts ...Option) *Server {
 		maxConnectionIdle: defaultMaxConnectionIdle,
 		ackTimeout:        defaultAckTimeout,
 		patten:            "/ws",
+		concurrentCount:   defaultConcurrentCount,
 	}
 
 	// 遍历所有的选项，并应用到Server结构体
 	for _, opt := range opts {
 		opt(server)
 	}
+
+	server.TaskRunner = NewTaskRunner(server.concurrentCount)
 
 	return server
 }
