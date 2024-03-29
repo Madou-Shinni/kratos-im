@@ -47,3 +47,12 @@ message Auth {
   string key = 1;
   uint64 expire = 2;
 }
+
+message Oauth2 {
+  message Github {
+    string client_id = 1;
+    string client_secret = 2;
+    string redirect_uri = 3;
+  }
+  Github github = 1;
+}

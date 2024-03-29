@@ -8,7 +8,7 @@ server:
 data:
   database:
     driver: mysql
-    source: root:root@tcp(127.0.0.1:3306)/test?parseTime=True&loc=Local
+    source: root:123456@tcp(127.0.0.1:3306)/kratos-im?parseTime=True&loc=Local
   redis:
     addr: 127.0.0.1:6379
     read_timeout: 0.2s
@@ -18,3 +18,9 @@ data:
 auth:
   key: secret!@#123
   expire: 604800
+oauth2:
+  # github oauth2
+  github:
+    client_id: yourclientid
+    client_secret: yourclientsecret
+    redirect_url: http://localhost:8080/oauth2/github/callback

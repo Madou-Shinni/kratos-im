@@ -3,7 +3,10 @@ package data
 import (
 	"context"
 	"github.com/redis/go-redis/v9"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 	"kratos-im/app/user/internal/conf"
+	"kratos-im/model"
 	"time"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -11,21 +14,23 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewUserRepo, NewRedis)
+var ProviderSet = wire.NewSet(NewData, NewUserRepo, NewRedis, NewDB)
 
 // Data .
 type Data struct {
 	rdb redis.Cmdable
+	db  *gorm.DB
 	// TODO wrapped database client
 }
 
 // NewData .
-func NewData(c *conf.Data, logger log.Logger, rdb redis.Cmdable) (*Data, func(), error) {
+func NewData(c *conf.Data, logger log.Logger, rdb redis.Cmdable, db *gorm.DB) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
 	}
 	return &Data{
 		rdb: rdb,
+		db:  db,
 	}, cleanup, nil
 }
 
@@ -50,4 +55,39 @@ func NewRedis(conf *conf.Data, logger log.Logger) redis.Cmdable {
 	}
 
 	return client
+}
+
+// NewDB 初始化db
+func NewDB(conf *conf.Data, logger log.Logger) *gorm.DB {
+	log := log.NewHelper(log.With(logger, "module", "user-service/data/gorm"))
+
+	var config gorm.Config
+	config.SkipDefaultTransaction = false
+	config.DisableForeignKeyConstraintWhenMigrating = true
+
+	dsn := conf.Database.Source
+
+	db, err := gorm.Open(mysql.New(mysql.Config{
+		DSN:               dsn,
+		DefaultStringSize: 171,
+	}), &config)
+
+	if err != nil {
+		log.Fatalf("failed opening connection to db: %v", err)
+	}
+
+	sqlDB, _ := db.DB()
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetMaxOpenConns(100)
+	sqlDB.SetConnMaxLifetime(time.Hour)
+
+	if err != nil {
+		log.Fatalf("failed opening connection to db: %v", err)
+	}
+
+	db.AutoMigrate(
+		&model.User{},
+	)
+
+	return db
 }

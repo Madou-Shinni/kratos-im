@@ -30,21 +30,16 @@ func NewUserService(uc *biz.UserUsecase, c *conf.Auth, rdb redis.Cmdable) *UserS
 	}
 }
 
-func (s *UserService) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserReply, error) {
-	return &pb.CreateUserReply{}, nil
+func (s *UserService) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginReply, error) {
+	data, err := s.uc.Login(ctx, req.Code)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.LoginReply{
+		Token: data.Token,
+	}, nil
 }
-func (s *UserService) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb.UpdateUserReply, error) {
-	return &pb.UpdateUserReply{}, nil
-}
-func (s *UserService) DeleteUser(ctx context.Context, req *pb.DeleteUserRequest) (*pb.DeleteUserReply, error) {
-	return &pb.DeleteUserReply{}, nil
-}
-func (s *UserService) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetUserReply, error) {
-	return &pb.GetUserReply{}, nil
-}
-func (s *UserService) ListUser(ctx context.Context, req *pb.ListUserRequest) (*pb.ListUserReply, error) {
-	return &pb.ListUserReply{}, nil
-}
+
 func (s *UserService) SetRootToken() error {
 	ctx := context.Background()
 	// 生成jwt token

@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"kratos-im/model"
 
 	"kratos-im/app/user/internal/biz"
 
@@ -21,22 +22,18 @@ func NewUserRepo(data *Data, logger log.Logger) biz.UserRepo {
 	}
 }
 
-func (r *userRepo) Save(ctx context.Context, g *biz.User) (*biz.User, error) {
-	return g, nil
-}
+func (u userRepo) Save(ctx context.Context, user *model.User) (*model.User, error) {
+	err := u.data.db.Where("github_id = ?", user.GithubId).Attrs(model.User{
+		ID:       user.ID,
+		Nickname: user.Nickname,
+		Avatar:   user.Avatar,
+		Email:    user.Email,
+		Sex:      user.Sex,
+		GithubId: user.GithubId,
+	}).FirstOrCreate(&user).Error
+	if err != nil {
+		return nil, err
+	}
 
-func (r *userRepo) Update(ctx context.Context, g *biz.User) (*biz.User, error) {
-	return g, nil
-}
-
-func (r *userRepo) FindByID(context.Context, int64) (*biz.User, error) {
-	return nil, nil
-}
-
-func (r *userRepo) ListByHello(context.Context, string) ([]*biz.User, error) {
-	return nil, nil
-}
-
-func (r *userRepo) ListAll(context.Context) ([]*biz.User, error) {
-	return nil, nil
+	return user, nil
 }
