@@ -57,13 +57,9 @@ func (u *ConsumerUsecase) HandleMsgTransfer(ctx context.Context, topic string, h
 	// 推送消息(推送给 ws server)
 	switch chatLog.ChatType {
 	case constants.ChatTypeSingle:
-		u.sendSingle(msg)
+		return u.sendSingle(msg)
 	case constants.ChatTypeGroup:
-		u.sendGroup()
-	}
-	if err != nil {
-		u.log.Errorf("HandleMsgTransfer Send: %v", err)
-		return err
+		return u.sendGroup()
 	}
 
 	return nil
@@ -79,6 +75,7 @@ func (u *ConsumerUsecase) sendSingle(data *rws.MsgChatTransfer) error {
 	})
 }
 
-func (u *ConsumerUsecase) sendGroup() {
+func (u *ConsumerUsecase) sendGroup() error {
 	// TODO: 查询群用户
+	return nil
 }

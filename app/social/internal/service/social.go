@@ -2,29 +2,48 @@ package service
 
 import (
 	"context"
+	"github.com/jinzhu/copier"
+	"kratos-im/app/social/internal/biz"
 
 	pb "kratos-im/api/social"
 )
 
 type SocialService struct {
 	pb.UnimplementedSocialServer
+	uc *biz.SocialUsecase
 }
 
-func NewSocialService() *SocialService {
-	return &SocialService{}
+func NewSocialService(uc *biz.SocialUsecase) *SocialService {
+	return &SocialService{uc: uc}
 }
 
 func (s *SocialService) FriendPutIn(ctx context.Context, req *pb.FriendPutInReq) (*pb.FriendPutInResp, error) {
-	return &pb.FriendPutInResp{}, nil
+	return s.uc.FriendPutIn(ctx, req)
 }
 func (s *SocialService) FriendPutInHandle(ctx context.Context, req *pb.FriendPutInHandleReq) (*pb.FriendPutInHandleResp, error) {
-	return &pb.FriendPutInHandleResp{}, nil
+	return s.uc.FriendPutInHandle(ctx, req)
 }
 func (s *SocialService) FriendPutInList(ctx context.Context, req *pb.FriendPutInListReq) (*pb.FriendPutInListResp, error) {
-	return &pb.FriendPutInListResp{}, nil
+	data, err := s.uc.ListFriendReqByUid(ctx, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	var list []*pb.FriendRequests
+	copier.Copy(&list, &data)
+
+	return &pb.FriendPutInListResp{List: list}, nil
 }
 func (s *SocialService) FriendList(ctx context.Context, req *pb.FriendListReq) (*pb.FriendListResp, error) {
-	return &pb.FriendListResp{}, nil
+	data, err := s.uc.ListFriendByUid(ctx, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	var list []*pb.Friends
+	copier.Copy(&list, &data)
+
+	return &pb.FriendListResp{List: list}, nil
 }
 func (s *SocialService) GroupCreate(ctx context.Context, req *pb.GroupCreateReq) (*pb.GroupCreateResp, error) {
 	return &pb.GroupCreateResp{}, nil

@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+// 定义包名
+package api.errorx;
+import "errors/errors.proto";
+
+// 多语言特定包名，用于源代码引用
+option go_package = "kratos-im/api/errorx;errorx";
+option java_multiple_files = true;
+option java_package = "api.helloworld";
+
+enum ErrorReason {
+  // 设置缺省错误码
+  option (errors.default_code) = 500;
+
+  UNKNOWN_ERROR = 0;
+  // 为某个枚举单独设置错误码
+  BUS = 1 [(errors.code) = 1]; // 正常业务错误
+}
