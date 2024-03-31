@@ -38,17 +38,17 @@ func (FriendRequests) TableName() string {
 
 // Groups 群组
 type Groups struct {
-	ID              uint64 `gorm:"primarykey" json:"id" form:"id"` // 主键
-	Name            string `gorm:"name" json:"name"`
-	Icon            string `gorm:"icon" json:"icon"`
-	Status          int    `gorm:"status" json:"status"`
-	CreatorUid      string `gorm:"creator_uid" json:"creatorUid"`
-	GroupType       int    `gorm:"group_type" json:"groupType"`
-	IsVerify        bool   `gorm:"is_verify" json:"isVerify"`
-	Notification    string `gorm:"notification" json:"notification"`
-	NotificationUid string `gorm:"notification_uid" json:"notificationUid"`
-	CreatedAt       string `gorm:"created_at" json:"createdAt"`
-	UpdatedAt       string `gorm:"updated_at" json:"updatedAt"`
+	ID              uint64    `gorm:"primarykey" json:"id" form:"id"` // 主键
+	Name            string    `gorm:"name" json:"name"`
+	Icon            string    `gorm:"icon" json:"icon"`
+	Status          int       `gorm:"status" json:"status"`
+	CreatorUid      string    `gorm:"creator_uid" json:"creatorUid"`
+	GroupType       int       `gorm:"group_type" json:"groupType"`
+	IsVerify        bool      `gorm:"is_verify" json:"isVerify"`
+	Notification    string    `gorm:"notification" json:"notification"`
+	NotificationUid string    `gorm:"notification_uid" json:"notificationUid"`
+	CreatedAt       time.Time `gorm:"created_at;type:timestamp" json:"createdAt"`
+	UpdatedAt       time.Time `gorm:"updated_at;type:timestamp" json:"updatedAt"`
 }
 
 func (Groups) TableName() string {
@@ -57,14 +57,14 @@ func (Groups) TableName() string {
 
 // GroupMembers 群成员
 type GroupMembers struct {
-	ID          string `gorm:"primarykey" json:"id" form:"id"` // 主键
-	GroupId     string `gorm:"group_id" json:"groupId"`
-	UserId      string `gorm:"user_id" json:"userId"`
-	RoleLevel   int    `gorm:"role_level" json:"roleLevel"`
-	JoinTime    string `gorm:"join_time" json:"joinTime"`
-	JoinSource  int    `gorm:"join_source" json:"joinSource"`
-	InviterUid  string `gorm:"inviter_uid" json:"inviterUid"`
-	OperatorUid string `gorm:"operator_uid" json:"operatorUid"`
+	ID          uint64                   `gorm:"primarykey" json:"id" form:"id"` // 主键
+	GroupId     uint64                   `gorm:"group_id" json:"groupId"`
+	UserId      string                   `gorm:"user_id" json:"userId"`
+	RoleLevel   constants.GroupRoleLevel `gorm:"role_level" json:"roleLevel"`
+	JoinTime    time.Time                `gorm:"join_time;type:timestamp" json:"joinTime"`
+	JoinSource  int                      `gorm:"join_source" json:"joinSource"`
+	InviterUid  string                   `gorm:"inviter_uid" json:"inviterUid"`
+	OperatorUid string                   `gorm:"operator_uid" json:"operatorUid"`
 }
 
 func (GroupMembers) TableName() string {
@@ -73,16 +73,16 @@ func (GroupMembers) TableName() string {
 
 // GroupRequests 群申请
 type GroupRequests struct {
-	ID            uint64 `gorm:"primarykey" json:"id" form:"id"` // 主键
-	ReqId         string `gorm:"req_id" json:"reqId"`
-	GroupId       string `gorm:"group_id" json:"groupId"`
-	ReqMsg        string `gorm:"req_msg" json:"reqMsg"`
-	ReqTime       string `gorm:"req_time" json:"reqTime"`
-	JoinSource    int    `gorm:"join_source" json:"joinSource"`
-	InviterUserId string `gorm:"inviter_user_id" json:"inviterUserId"`
-	HandleUserId  string `gorm:"handle_user_id" json:"handleUserId"`
-	HandleTime    string `gorm:"handle_time" json:"handleTime"`
-	HandleResult  int    `gorm:"handle_result" json:"handleResult"`
+	ID            uint64                 `gorm:"primarykey" json:"id" form:"id"` // 主键
+	ReqId         string                 `gorm:"req_id" json:"reqId"`
+	GroupId       uint64                 `gorm:"group_id" json:"groupId"`
+	ReqMsg        string                 `gorm:"req_msg" json:"reqMsg"`
+	ReqTime       sql.NullTime           `gorm:"req_time" json:"reqTime"`
+	JoinSource    int                    `gorm:"join_source" json:"joinSource"`
+	InviterUserId string                 `gorm:"inviter_user_id" json:"inviterUserId"`
+	HandleUserId  string                 `gorm:"handle_user_id" json:"handleUserId"`
+	HandleTime    sql.NullTime           `gorm:"handle_time" json:"handleTime"`
+	HandleResult  constants.HandleResult `gorm:"handle_result" json:"handleResult"`
 }
 
 func (GroupRequests) TableName() string {

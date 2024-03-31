@@ -1,3 +1,5 @@
+app:
+  name: kratos-im:im-service
 server:
   http:
     addr: 0.0.0.0:8000

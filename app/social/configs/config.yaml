@@ -1,3 +1,5 @@
+app:
+  name: kratos-im:social-service
 server:
   http:
     addr: 0.0.0.0:10012
@@ -13,3 +15,6 @@ data:
     addr: 127.0.0.1:6379
     read_timeout: 0.2s
     write_timeout: 0.2s
+auth:
+  key: tkP2yq!i=oamTR#oQ:8n
+  expire: 604800

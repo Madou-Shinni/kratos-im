@@ -2,6 +2,9 @@ package data
 
 import (
 	"context"
+	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
+	"github.com/go-kratos/kratos/v2/registry"
+	consulAPI "github.com/hashicorp/consul/api"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"kratos-im/app/social/internal/biz"
@@ -14,7 +17,7 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewSocialRepo, NewTransaction)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewSocialRepo, NewTransaction, NewDiscovery, NewRegistrar)
 
 // Data .
 type Data struct {
@@ -93,4 +96,28 @@ func (d *Data) DB(ctx context.Context) *gorm.DB {
 		return tx
 	}
 	return d.db
+}
+
+func NewDiscovery(conf *conf.Registry) registry.Discovery {
+	c := consulAPI.DefaultConfig()
+	c.Address = conf.Consul.Address
+	c.Scheme = conf.Consul.Scheme
+	cli, err := consulAPI.NewClient(c)
+	if err != nil {
+		panic(err)
+	}
+	r := consul.New(cli, consul.WithHealthCheck(false))
+	return r
+}
+
+func NewRegistrar(conf *conf.Registry) registry.Registrar {
+	c := consulAPI.DefaultConfig()
+	c.Address = conf.Consul.Address
+	c.Scheme = conf.Consul.Scheme
+	cli, err := consulAPI.NewClient(c)
+	if err != nil {
+		panic(err)
+	}
+	r := consul.New(cli, consul.WithHealthCheck(false))
+	return r
 }

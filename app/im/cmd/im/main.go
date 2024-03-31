@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"github.com/go-kratos/kratos/v2/registry"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
 	"kratos-im/app/im/internal/conf"
 	"kratos-im/pkg/rws"
@@ -18,7 +19,7 @@ import (
 // go build -ldflags "-X main.Version=x.y.z"
 var (
 	// Name is the name of the compiled software.
-	Name string
+	Name = "kratos-im:im-service"
 	// Version is the version of the compiled software.
 	Version string
 	// flagconf is the config flag.
@@ -31,9 +32,10 @@ func init() {
 	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
 }
 
-func newApp(logger log.Logger, ws *rws.Server, gs *grpc.Server) *kratos.App {
+func newApp(logger log.Logger, ws *rws.Server, gs *grpc.Server, register registry.Registrar, c *conf.App) *kratos.App {
+	Name = c.Name
 	return kratos.New(
-		kratos.ID(id),
+		kratos.ID(Name),
 		kratos.Name(Name),
 		kratos.Version(Version),
 		kratos.Metadata(map[string]string{}),
@@ -42,6 +44,7 @@ func newApp(logger log.Logger, ws *rws.Server, gs *grpc.Server) *kratos.App {
 			ws,
 			gs,
 		),
+		kratos.Registrar(register),
 	)
 }
 
@@ -72,7 +75,7 @@ func main() {
 		panic(err)
 	}
 
-	app, cleanup, err := wireApp(bc.Server, bc.Data, bc.Auth, logger)
+	app, cleanup, err := wireApp(bc.Server, bc.Data, bc.Auth, bc.App, bc.Register, logger)
 	if err != nil {
 		panic(err)
 	}

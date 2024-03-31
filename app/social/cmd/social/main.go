@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"github.com/go-kratos/kratos/v2/registry"
 	"os"
 
 	"kratos-im/app/social/internal/conf"
@@ -18,7 +19,7 @@ import (
 // go build -ldflags "-X main.Version=x.y.z"
 var (
 	// Name is the name of the compiled software.
-	Name string
+	Name = "kratos-im:social-service"
 	// Version is the version of the compiled software.
 	Version string
 	// flagconf is the config flag.
@@ -31,9 +32,10 @@ func init() {
 	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
 }
 
-func newApp(logger log.Logger, gs *grpc.Server) *kratos.App {
+func newApp(logger log.Logger, gs *grpc.Server, register registry.Registrar, app *conf.App) *kratos.App {
+	Name = app.Name
 	return kratos.New(
-		kratos.ID(id),
+		kratos.ID(Name),
 		kratos.Name(Name),
 		kratos.Version(Version),
 		kratos.Metadata(map[string]string{}),
@@ -41,6 +43,7 @@ func newApp(logger log.Logger, gs *grpc.Server) *kratos.App {
 		kratos.Server(
 			gs,
 		),
+		kratos.Registrar(register),
 	)
 }
 
@@ -71,7 +74,7 @@ func main() {
 		panic(err)
 	}
 
-	app, cleanup, err := wireApp(bc.Server, bc.Data, logger)
+	app, cleanup, err := wireApp(bc.Server, bc.Data, logger, bc.Register, bc.App)
 	if err != nil {
 		panic(err)
 	}

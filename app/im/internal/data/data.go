@@ -2,6 +2,9 @@ package data
 
 import (
 	"context"
+	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
+	"github.com/go-kratos/kratos/v2/registry"
+	consulAPI "github.com/hashicorp/consul/api"
 	"github.com/tx7do/kratos-transport/broker"
 	"github.com/tx7do/kratos-transport/broker/kafka"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -14,7 +17,7 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewMongo, NewIMRepo, NewMQClient)
+var ProviderSet = wire.NewSet(NewData, NewMongo, NewIMRepo, NewMQClient, NewRegistrar)
 
 // Data .
 type Data struct {
@@ -70,4 +73,16 @@ func NewMQClient(c *conf.Data, logger log.Logger) broker.Broker {
 	}
 
 	return b
+}
+
+func NewRegistrar(conf *conf.Registry) registry.Registrar {
+	c := consulAPI.DefaultConfig()
+	c.Address = conf.Consul.Address
+	c.Scheme = conf.Consul.Scheme
+	cli, err := consulAPI.NewClient(c)
+	if err != nil {
+		panic(err)
+	}
+	r := consul.New(cli, consul.WithHealthCheck(false))
+	return r
 }

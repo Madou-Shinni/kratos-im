@@ -33,6 +33,13 @@ type SocialRepo interface {
 	SaveFriends(ctx context.Context, data ...*model.Friends) error
 	ListFriendByUid(ctx context.Context, uid string) ([]*model.Friends, error)
 	ListFriendReqByUid(ctx context.Context, uid string) ([]*model.FriendRequests, error)
+	ListGroupByUid(ctx context.Context, uid string) ([]*model.Groups, error)
+	SaveGroup(ctx context.Context, data model.Groups) (uint64, error)
+	SaveGroupMember(ctx context.Context, data model.GroupMembers) error
+	FirstGroupMemberByGidUid(ctx context.Context, gid uint64, uid string) (*model.GroupMembers, error)
+	FirstGroupReqByGidUid(ctx context.Context, gid uint64, uid string) (*model.GroupRequests, error)
+	SaveGroupReq(ctx context.Context, data model.GroupRequests) (uint64, error)
+	FirstGroupById(ctx context.Context, id uint64) (*model.Groups, error)
 }
 
 // SocialUsecase is a Social usecase.
@@ -147,4 +154,155 @@ func (uc *SocialUsecase) ListFriendByUid(ctx context.Context, uid string) ([]*mo
 // ListFriendReqByUid 申请列表
 func (uc *SocialUsecase) ListFriendReqByUid(ctx context.Context, uid string) ([]*model.FriendRequests, error) {
 	return uc.repo.ListFriendReqByUid(ctx, uid)
+}
+
+// GroupCreate 创建群组
+func (uc *SocialUsecase) GroupCreate(ctx context.Context, req *pb.GroupCreateReq) (*pb.GroupCreateResp, error) {
+	var gid uint64
+	var err error
+	err = uc.tx.ExecTx(ctx, func(ctx context.Context) error {
+		gid, err = uc.repo.SaveGroup(ctx, model.Groups{
+			Name:       req.Name,
+			Icon:       req.Icon,
+			Status:     0,
+			CreatorUid: req.CreatorUid,
+			GroupType:  0,
+			CreatedAt:  time.Now(),
+		})
+		if err != nil {
+			return err
+		}
+
+		err = uc.repo.SaveGroupMember(ctx, model.GroupMembers{
+			GroupId:   gid,
+			UserId:    req.CreatorUid,
+			RoleLevel: constants.CreatorGroupRoleLevel,
+			JoinTime:  time.Now(),
+		})
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GroupCreateResp{Id: gid}, nil
+}
+
+// GroupPutin 申请加入群组
+func (uc *SocialUsecase) GroupPutin(ctx context.Context, req *pb.GroupPutinReq) (*pb.GroupPutinResp, error) {
+	//  1. 普通用户申请 ： 如果群无验证直接进入
+	//  2. 群成员邀请： 如果群无验证直接进入
+	//  3. 群管理员/群创建者邀请：直接进入群
+	var (
+		inviteGroupMember *model.GroupMembers
+		userGroupMember   *model.GroupMembers
+		groupInfo         *model.Groups
+
+		err error
+	)
+
+	// 查询群成员
+	userGroupMember, err = uc.repo.FirstGroupMemberByGidUid(ctx, req.GroupId, req.ReqId)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	if userGroupMember != nil {
+		return &pb.GroupPutinResp{}, nil
+	}
+
+	// 查询入群申请
+	groupReq, err := uc.repo.FirstGroupReqByGidUid(ctx, req.GroupId, req.ReqId)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	if groupReq != nil {
+		return &pb.GroupPutinResp{}, nil
+	}
+
+	groupReq = &model.GroupRequests{
+		ReqId:   req.ReqId,
+		GroupId: req.GroupId,
+		ReqMsg:  req.ReqMsg,
+		ReqTime: sql.NullTime{
+			Time:  time.Unix(req.ReqTime, 0),
+			Valid: true,
+		},
+		JoinSource:    int(req.JoinSource),
+		InviterUserId: req.InviterUid,
+		HandleResult:  constants.HandleResultNone,
+	}
+
+	createGroupMember := func() {
+		if err != nil {
+			return
+		}
+		err = uc.createGroupMember(ctx, req)
+	}
+
+	groupInfo, err = uc.repo.FirstGroupById(ctx, req.GroupId)
+	if err != nil {
+		return nil, err
+	}
+
+	// 验证是否要验证
+	if !groupInfo.IsVerify {
+		// 不需要
+		defer createGroupMember()
+
+		groupReq.HandleResult = constants.HandleResultAgree
+
+		return uc.createGroupReq(ctx, *groupReq, true)
+	}
+
+	// 验证进群方式
+	if constants.GroupJoinSource(req.JoinSource) == constants.PutInGroupJoinSource {
+		// 申请
+		return uc.createGroupReq(ctx, *groupReq, false)
+	}
+
+	inviteGroupMember, err = uc.repo.FirstGroupMemberByGidUid(ctx, req.GroupId, req.InviterUid)
+	if err != nil {
+		return nil, err
+	}
+
+	if inviteGroupMember.RoleLevel == constants.CreatorGroupRoleLevel || inviteGroupMember.RoleLevel == constants.ManagerGroupRoleLevel {
+		// 是管理者或创建者邀请
+		defer createGroupMember()
+
+		groupReq.HandleResult = constants.HandleResultAgree
+		groupReq.HandleUserId = req.InviterUid
+		return uc.createGroupReq(ctx, *groupReq, true)
+	}
+	return uc.createGroupReq(ctx, *groupReq, false)
+}
+
+func (uc *SocialUsecase) createGroupReq(ctx context.Context, groupReq model.GroupRequests, isPass bool) (*pb.GroupPutinResp, error) {
+	_, err := uc.repo.SaveGroupReq(ctx, groupReq)
+	if err != nil {
+		return nil, err
+	}
+
+	if isPass {
+		return &pb.GroupPutinResp{GroupId: groupReq.GroupId}, nil
+	}
+
+	return &pb.GroupPutinResp{}, nil
+}
+
+func (uc *SocialUsecase) createGroupMember(ctx context.Context, req *pb.GroupPutinReq) error {
+	groupMember := model.GroupMembers{
+		GroupId:     req.GroupId,
+		UserId:      req.ReqId,
+		RoleLevel:   constants.AtLargeGroupRoleLevel,
+		OperatorUid: req.InviterUid,
+	}
+	err := uc.repo.SaveGroupMember(ctx, groupMember)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

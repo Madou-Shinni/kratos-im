@@ -49,12 +49,14 @@ func (r *socialRepo) SaveFriends(ctx context.Context, data ...*model.Friends) er
 	return nil
 }
 
-func (r *socialRepo) FindByID(context.Context, int64) (*biz.Social, error) {
-	return nil, nil
-}
-
-func (r *socialRepo) ListByHello(context.Context, string) ([]*biz.Social, error) {
-	return nil, nil
+// FirstGroupById 通过id查找群
+func (r *socialRepo) FirstGroupById(ctx context.Context, id uint64) (*model.Groups, error) {
+	var data model.Groups
+	err := r.data.db.First(&data, "id = ?", id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &data, nil
 }
 
 // ListFriendByUid 好友列表
@@ -105,4 +107,49 @@ func (r *socialRepo) ListFriendReqByUid(ctx context.Context, uid string) ([]*mod
 		return nil, err
 	}
 	return data, nil
+}
+
+// ListGroupByUid 通过uid查询群列表
+func (r *socialRepo) ListGroupByUid(ctx context.Context, uid string) ([]*model.Groups, error) {
+	var data []*model.Groups
+	err := r.data.db.Find(&data, "creator_uid = ?", uid).Error
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+// SaveGroupReq 创建入群申请
+func (r *socialRepo) SaveGroupReq(ctx context.Context, data model.GroupRequests) (uint64, error) {
+	return data.ID, r.data.DB(ctx).Create(&data).Error
+}
+
+// SaveGroup 创建群
+func (r *socialRepo) SaveGroup(ctx context.Context, data model.Groups) (uint64, error) {
+	return data.ID, r.data.DB(ctx).Create(&data).Error
+}
+
+// SaveGroupMember 添加群成员
+func (r *socialRepo) SaveGroupMember(ctx context.Context, data model.GroupMembers) error {
+	return r.data.DB(ctx).Create(&data).Error
+}
+
+// FirstGroupMemberByGidUid 通过gid,uid查询群成员
+func (r *socialRepo) FirstGroupMemberByGidUid(ctx context.Context, gid uint64, uid string) (*model.GroupMembers, error) {
+	var data *model.GroupMembers
+	err := r.data.db.First(&data, "group_id = ? AND user_id = ?", gid, uid).Error
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+// FirstGroupReqByGidUid 通过gid,uid查询入群申请
+func (r *socialRepo) FirstGroupReqByGidUid(ctx context.Context, gid uint64, uid string) (*model.GroupRequests, error) {
+	var data model.GroupRequests
+	err := r.data.db.First(&data, "group_id = ? AND uid = ?", gid, uid).Error
+	if err != nil {
+		return nil, err
+	}
+	return &data, nil
 }
