@@ -9,7 +9,6 @@ import (
 	pb "kratos-im/api/im"
 	"kratos-im/constants"
 	"kratos-im/model"
-	"kratos-im/pkg/rws"
 	"kratos-im/pkg/tools"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -41,14 +40,14 @@ func NewIMUsecase(repo IMRepo, logger log.Logger) *IMUsecase {
 	return &IMUsecase{repo: repo, log: log.NewHelper(logger)}
 }
 
-func (uc *IMUsecase) CreateChatLog(ctx context.Context, data *rws.Chat) error {
+func (uc *IMUsecase) CreateChatLog(ctx context.Context, data *pb.ChatLog) error {
 	chatLog := model.ChatLog{
 		SendId:         data.SendId,
 		RecvId:         data.RecvId,
 		ConversationId: data.ConversationId,
 		MsgFrom:        0,
-		MsgType:        data.Msg.MType,
-		MsgContent:     data.Msg.Content,
+		MsgType:        constants.MType(data.MsgType),
+		MsgContent:     data.MsgContent,
 		SendTime:       data.SendTime,
 		Status:         0,
 	}

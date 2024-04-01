@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package api.gateway;
+
+import "google/api/annotations.proto";
+
+option go_package = "kratos-im/api/gateway;gateway";
+option java_multiple_files = true;
+option java_package = "api.gateway";
+
+service Gateway {
+    rpc SayHello (SayHelloRequest) returns (SayHelloResponse) {
+      option (google.api.http) = {
+        get: "/say-hello/{name}"
+      };
+    };
+}
+
+message SayHelloRequest {
+    string name = 1;
+}
+
+message SayHelloResponse {
+    string message = 1;
+}

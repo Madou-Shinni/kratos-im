@@ -3,6 +3,9 @@ package data
 import (
 	"context"
 	"fmt"
+	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
+	"github.com/go-kratos/kratos/v2/registry"
+	consulAPI "github.com/hashicorp/consul/api"
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -17,7 +20,7 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewConsumerRepo, NewMongo, NewRedis, NewWsClient)
+var ProviderSet = wire.NewSet(NewData, NewConsumerRepo, NewMongo, NewRedis, NewWsClient, NewRegistrar)
 
 // Data .
 type Data struct {
@@ -104,4 +107,16 @@ func NewWsClient(c *conf.Data, logger log.Logger, rdb redis.Cmdable) (rws.IClien
 	}
 
 	return client, nil
+}
+
+func NewRegistrar(conf *conf.Registry) registry.Registrar {
+	c := consulAPI.DefaultConfig()
+	c.Address = conf.Consul.Address
+	c.Scheme = conf.Consul.Scheme
+	cli, err := consulAPI.NewClient(c)
+	if err != nil {
+		panic(err)
+	}
+	r := consul.New(cli, consul.WithHealthCheck(false))
+	return r
 }

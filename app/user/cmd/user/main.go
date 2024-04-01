@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"github.com/go-kratos/kratos/v2/registry"
 	"os"
 
 	"kratos-im/app/user/internal/conf"
@@ -31,7 +32,9 @@ func init() {
 	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
 }
 
-func newApp(logger log.Logger, gs *grpc.Server) *kratos.App {
+func newApp(logger log.Logger, gs *grpc.Server, registrar registry.Registrar, app *conf.App) *kratos.App {
+	id = app.Name
+	Name = app.Name
 	return kratos.New(
 		kratos.ID(id),
 		kratos.Name(Name),
@@ -41,6 +44,7 @@ func newApp(logger log.Logger, gs *grpc.Server) *kratos.App {
 		kratos.Server(
 			gs,
 		),
+		kratos.Registrar(registrar),
 	)
 }
 
@@ -71,7 +75,7 @@ func main() {
 		panic(err)
 	}
 
-	app, cleanup, err := wireApp(bc.Server, bc.Data, logger, bc.Auth)
+	app, cleanup, err := wireApp(bc.Server, bc.Data, bc.Auth, bc.Oauth2, bc.Register, bc.App, logger)
 	if err != nil {
 		panic(err)
 	}

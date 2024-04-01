@@ -3,8 +3,33 @@
 
 openapi: 3.0.3
 info:
-    title: ""
+    title: Gateway API
     version: 0.0.1
-paths: {}
+paths:
+    /say-hello/{name}:
+        get:
+            tags:
+                - Gateway
+            operationId: Gateway_SayHello
+            parameters:
+                - name: name
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.gateway.SayHelloResponse'
 components:
-    schemas: {}
+    schemas:
+        api.gateway.SayHelloResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+tags:
+    - name: Gateway

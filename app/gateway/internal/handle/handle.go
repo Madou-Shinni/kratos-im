@@ -3,7 +3,7 @@ package handle
 import (
 	"context"
 	"github.com/mitchellh/mapstructure"
-	"kratos-im/app/im/internal/service"
+	"kratos-im/app/gateway/internal/service"
 	"kratos-im/constants"
 	"kratos-im/pkg/rws"
 	"kratos-im/pkg/tools"
@@ -11,7 +11,7 @@ import (
 )
 
 // OnLine 上线
-func OnLine(s *service.IMService) rws.HandleFunc {
+func OnLine(s *service.GatewayService) rws.HandleFunc {
 	return func(svr *rws.Server, conn *rws.Conn, msg rws.Message) {
 		uids := svr.GetUsers()
 		myids := svr.GetUsers(conn)
@@ -29,7 +29,7 @@ func OnLine(s *service.IMService) rws.HandleFunc {
 }
 
 // Chat 聊天
-func Chat(s *service.IMService) rws.HandleFunc {
+func Chat(s *service.GatewayService) rws.HandleFunc {
 	return func(svr *rws.Server, conn *rws.Conn, msg rws.Message) {
 		var data rws.Chat
 		if err := mapstructure.Decode(msg.Data, &data); err != nil {
@@ -64,7 +64,7 @@ func Chat(s *service.IMService) rws.HandleFunc {
 }
 
 // Push 消息推送
-func Push(s *service.IMService) rws.HandleFunc {
+func Push(s *service.GatewayService) rws.HandleFunc {
 	return func(svr *rws.Server, conn *rws.Conn, msg rws.Message) {
 		var data rws.Push
 		if err := mapstructure.Decode(msg.Data, &data); err != nil {

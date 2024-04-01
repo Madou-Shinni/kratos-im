@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"github.com/go-kratos/kratos/v2/registry"
 	"github.com/tx7do/kratos-transport/transport/kafka"
 	"os"
 
@@ -31,7 +32,9 @@ func init() {
 	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
 }
 
-func newApp(logger log.Logger, consumer *kafka.Server) *kratos.App {
+func newApp(logger log.Logger, consumer *kafka.Server, app *conf.App, register registry.Registrar) *kratos.App {
+	id = app.Name
+	Name = app.Name
 	return kratos.New(
 		kratos.ID(id),
 		kratos.Name(Name),
@@ -41,6 +44,7 @@ func newApp(logger log.Logger, consumer *kafka.Server) *kratos.App {
 		kratos.Server(
 			consumer,
 		),
+		kratos.Registrar(register),
 	)
 }
 
@@ -71,7 +75,7 @@ func main() {
 		panic(err)
 	}
 
-	app, cleanup, err := wireApp(bc.Server, bc.Data, logger)
+	app, cleanup, err := wireApp(bc.Server, bc.Data, bc.App, bc.Register, logger)
 	if err != nil {
 		panic(err)
 	}

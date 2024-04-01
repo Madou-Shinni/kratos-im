@@ -7,6 +7,8 @@ option java_multiple_files = true;
 option java_package = "api.im";
 
 service IM {
+	// 创建会话记录
+	rpc CreateChatLog(ChatLog) returns(CreateChatLogResp);
 	// 获取会话记录
 	rpc GetChatLog(GetChatLogReq) returns(GetChatLogResp);
 	// 建立会话: 群聊, 私聊
@@ -47,6 +49,9 @@ message Conversation {
 }
 
 // ------------ req resp ---------------
+
+message CreateChatLogResp {
+}
 
 message GetConversationsReq {
 	string userId = 1;

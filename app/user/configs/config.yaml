@@ -1,7 +1,6 @@
+app:
+  name: kratos-im:user-service
 server:
-  http:
-    addr: 0.0.0.0:10010
-    timeout: 1s
   grpc:
     addr: 0.0.0.0:10009
     timeout: 1s
@@ -16,7 +15,7 @@ data:
     password: ""
     db: 0
 auth:
-  key: secret!@#123
+  key: tkP2yq!i=oamTR#oQ:8n
   expire: 604800
 oauth2:
   # github oauth2

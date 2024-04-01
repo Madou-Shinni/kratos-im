@@ -8,7 +8,6 @@ import "google/protobuf/duration.proto";
 message Bootstrap {
   Server server = 1;
   Data data = 2;
-  Auth auth = 3;
   App app = 4;
   Registry register = 5;
 }
@@ -26,16 +25,12 @@ message App {
 }
 
 message Server {
-  message WebSocket {
-    string addr = 1;
-  }
   message GRPC {
     string network = 1;
     string addr = 2;
     google.protobuf.Duration timeout = 3;
   }
-  GRPC grpc = 2;
-  WebSocket websocket = 3;
+  GRPC grpc = 1;
 }
 
 message Data {
@@ -53,15 +48,7 @@ message Data {
     string url = 1;
     string db = 2;
   }
-  message Kafka {
-    repeated string brokers = 1;
-  }
   Database database = 1;
   Redis redis = 2;
   Mongo mongo = 3;
-  Kafka kafka = 4;
-}
-
-message Auth {
-  string key = 1;
 }

@@ -9,6 +9,21 @@ message Bootstrap {
   Server server = 1;
   Data data = 2;
   Auth auth = 3;
+  Oauth2 oauth2 = 4;
+  Registry register = 5;
+  App app = 6;
+}
+
+message Registry {
+  message Consul {
+    string address = 1;
+    string scheme = 2;
+  }
+  Consul consul = 1;
+}
+
+message App {
+  string name = 1;
 }
 
 message Server {

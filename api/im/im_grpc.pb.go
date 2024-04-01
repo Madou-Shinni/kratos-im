@@ -19,6 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
+	IM_CreateChatLog_FullMethodName           = "/api.im.IM/CreateChatLog"
 	IM_GetChatLog_FullMethodName              = "/api.im.IM/GetChatLog"
 	IM_SetUpUserConversation_FullMethodName   = "/api.im.IM/SetUpUserConversation"
 	IM_GetConversations_FullMethodName        = "/api.im.IM/GetConversations"
@@ -30,6 +31,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type IMClient interface {
+	// 创建会话记录
+	CreateChatLog(ctx context.Context, in *ChatLog, opts ...grpc.CallOption) (*CreateChatLogResp, error)
 	// 获取会话记录
 	GetChatLog(ctx context.Context, in *GetChatLogReq, opts ...grpc.CallOption) (*GetChatLogResp, error)
 	// 建立会话: 群聊, 私聊
@@ -47,6 +50,15 @@ type iMClient struct {
 
 func NewIMClient(cc grpc.ClientConnInterface) IMClient {
 	return &iMClient{cc}
+}
+
+func (c *iMClient) CreateChatLog(ctx context.Context, in *ChatLog, opts ...grpc.CallOption) (*CreateChatLogResp, error) {
+	out := new(CreateChatLogResp)
+	err := c.cc.Invoke(ctx, IM_CreateChatLog_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *iMClient) GetChatLog(ctx context.Context, in *GetChatLogReq, opts ...grpc.CallOption) (*GetChatLogResp, error) {
@@ -98,6 +110,8 @@ func (c *iMClient) CreateGroupConversation(ctx context.Context, in *CreateGroupC
 // All implementations must embed UnimplementedIMServer
 // for forward compatibility
 type IMServer interface {
+	// 创建会话记录
+	CreateChatLog(context.Context, *ChatLog) (*CreateChatLogResp, error)
 	// 获取会话记录
 	GetChatLog(context.Context, *GetChatLogReq) (*GetChatLogResp, error)
 	// 建立会话: 群聊, 私聊
@@ -114,6 +128,9 @@ type IMServer interface {
 type UnimplementedIMServer struct {
 }
 
+func (UnimplementedIMServer) CreateChatLog(context.Context, *ChatLog) (*CreateChatLogResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateChatLog not implemented")
+}
 func (UnimplementedIMServer) GetChatLog(context.Context, *GetChatLogReq) (*GetChatLogResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetChatLog not implemented")
 }
@@ -140,6 +157,24 @@ type UnsafeIMServer interface {
 
 func RegisterIMServer(s grpc.ServiceRegistrar, srv IMServer) {
 	s.RegisterService(&IM_ServiceDesc, srv)
+}
+
+func _IM_CreateChatLog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChatLog)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IMServer).CreateChatLog(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IM_CreateChatLog_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IMServer).CreateChatLog(ctx, req.(*ChatLog))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _IM_GetChatLog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -239,6 +274,10 @@ var IM_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "api.im.IM",
 	HandlerType: (*IMServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CreateChatLog",
+			Handler:    _IM_CreateChatLog_Handler,
+		},
 		{
 			MethodName: "GetChatLog",
 			Handler:    _IM_GetChatLog_Handler,

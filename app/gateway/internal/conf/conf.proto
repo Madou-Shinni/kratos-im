@@ -1,0 +1,70 @@
+syntax = "proto3";
+package kratos.api;
+
+option go_package = "kratos-im/app/gateway/internal/conf;conf";
+
+import "google/protobuf/duration.proto";
+
+message Bootstrap {
+  Server server = 1;
+  Data data = 2;
+  App app = 3;
+  Registry register = 4;
+  Discovery discoverer = 5;
+  Auth auth = 6;
+}
+
+message App {
+  string name = 1;
+}
+
+message Registry {
+  message Consul {
+    string address = 1;
+    string scheme = 2;
+  }
+  Consul consul = 1;
+}
+
+message Discovery {
+  message Service {
+    string im = 1;
+  }
+  Service service = 1;
+}
+
+message Server {
+  message HTTP {
+    string network = 1;
+    string addr = 2;
+    google.protobuf.Duration timeout = 3;
+  }
+  message WebSocket {
+    string addr = 1;
+  }
+  HTTP http = 1;
+  WebSocket websocket = 2;
+}
+
+message Data {
+  message Database {
+    string driver = 1;
+    string source = 2;
+  }
+  message Redis {
+    string network = 1;
+    string addr = 2;
+    google.protobuf.Duration read_timeout = 3;
+    google.protobuf.Duration write_timeout = 4;
+  }
+  message Kafka {
+    repeated string brokers = 1;
+  }
+  Database database = 1;
+  Redis redis = 2;
+  Kafka kafka = 3;
+}
+
+message Auth {
+  string key = 1;
+}

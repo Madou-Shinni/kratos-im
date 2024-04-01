@@ -2,40 +2,35 @@ package service
 
 import (
 	"context"
-	"github.com/tx7do/kratos-transport/broker"
 	pb "kratos-im/api/im"
 	v1 "kratos-im/api/im"
 	"kratos-im/app/im/internal/biz"
-	"kratos-im/pkg/rws"
 	"kratos-im/pkg/tools"
-	"time"
 )
 
 // IMService is a greeter service.
 type IMService struct {
 	v1.UnimplementedIMServer
-	uc          *biz.IMUsecase
-	KafkaBroker broker.Broker
+	uc *biz.IMUsecase
 }
 
 // NewIMService new a greeter service.
-func NewIMService(uc *biz.IMUsecase, kafkaBroker broker.Broker) *IMService {
+func NewIMService(uc *biz.IMUsecase) *IMService {
 	return &IMService{
-		uc:          uc,
-		KafkaBroker: kafkaBroker,
+		uc: uc,
 	}
 }
 
 // CreateChatLog 创建私聊消息
-func (s *IMService) CreateChatLog(ctx context.Context, data *rws.Chat, userID string) error {
+func (s *IMService) CreateChatLog(ctx context.Context, data *pb.ChatLog) (*pb.CreateChatLogResp, error) {
 	if data.ConversationId == "" {
-		data.ConversationId = tools.CombineId(userID, data.RecvId)
+		data.ConversationId = tools.CombineId(data.SendId, data.RecvId)
 	}
-
-	data.SendId = userID
-	data.SendTime = time.Now().UnixMilli()
-
-	return s.uc.CreateChatLog(ctx, data)
+	err := s.uc.CreateChatLog(ctx, data)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CreateChatLogResp{}, nil
 }
 
 func (s *IMService) GetChatLog(ctx context.Context, req *pb.GetChatLogReq) (*pb.GetChatLogResp, error) {

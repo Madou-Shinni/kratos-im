@@ -1,0 +1,12 @@
+app:
+  name: kratos-im:gateway-service
+server:
+  http:
+    addr: 0.0.0.0:8000
+    timeout: 1s
+  websocket:
+    addr: 0.0.0.0:10000
+data:
+  kafka:
+    brokers:
+      - 127.0.0.1:9092

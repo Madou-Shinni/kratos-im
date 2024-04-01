@@ -5,7 +5,6 @@ import (
 	"github.com/go-kratos/kratos/v2/registry"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
 	"kratos-im/app/im/internal/conf"
-	"kratos-im/pkg/rws"
 	"os"
 
 	"github.com/go-kratos/kratos/v2"
@@ -32,16 +31,16 @@ func init() {
 	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
 }
 
-func newApp(logger log.Logger, ws *rws.Server, gs *grpc.Server, register registry.Registrar, c *conf.App) *kratos.App {
+func newApp(logger log.Logger, gs *grpc.Server, register registry.Registrar, c *conf.App) *kratos.App {
 	Name = c.Name
+	id = c.Name
 	return kratos.New(
-		kratos.ID(Name),
+		kratos.ID(id),
 		kratos.Name(Name),
 		kratos.Version(Version),
 		kratos.Metadata(map[string]string{}),
 		kratos.Logger(logger),
 		kratos.Server(
-			ws,
 			gs,
 		),
 		kratos.Registrar(register),
@@ -75,7 +74,7 @@ func main() {
 		panic(err)
 	}
 
-	app, cleanup, err := wireApp(bc.Server, bc.Data, bc.Auth, bc.App, bc.Register, logger)
+	app, cleanup, err := wireApp(bc.Server, bc.Data, bc.App, bc.Register, logger)
 	if err != nil {
 		panic(err)
 	}
