@@ -17,7 +17,11 @@ message Registry {
     string address = 1;
     string scheme = 2;
   }
+  message Etcd {
+    repeated string endpoints = 1;
+  }
   Consul consul = 1;
+  Etcd etcd = 2;
 }
 
 message App {

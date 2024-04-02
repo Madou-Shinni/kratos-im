@@ -2,9 +2,9 @@ package data
 
 import (
 	"context"
-	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
+	"github.com/go-kratos/kratos/contrib/registry/etcd/v2"
 	"github.com/go-kratos/kratos/v2/registry"
-	consulAPI "github.com/hashicorp/consul/api"
+	etcdv3 "go.etcd.io/etcd/client/v3"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"kratos-im/app/im/internal/conf"
@@ -56,13 +56,12 @@ func NewMongo(c *conf.Data, logger log.Logger) (*mongo.Database, error) {
 }
 
 func NewRegistrar(conf *conf.Registry) registry.Registrar {
-	c := consulAPI.DefaultConfig()
-	c.Address = conf.Consul.Address
-	c.Scheme = conf.Consul.Scheme
-	cli, err := consulAPI.NewClient(c)
+	cfg := etcdv3.Config{
+		Endpoints: conf.Etcd.Endpoints,
+	}
+	cli, err := etcdv3.New(cfg)
 	if err != nil {
 		panic(err)
 	}
-	r := consul.New(cli, consul.WithHealthCheck(false))
-	return r
+	return etcd.New(cli)
 }

@@ -1,4 +1,4 @@
 discoverer:
   service:
-    im: 127.0.0.1:8500
-    scheme: http
+    im: kratos-im:im-service
+    social: kratos-im:social-service

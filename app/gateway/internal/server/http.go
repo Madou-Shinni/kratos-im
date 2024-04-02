@@ -1,6 +1,8 @@
 package server
 
 import (
+	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
+	jwtv5 "github.com/golang-jwt/jwt/v5"
 	v1 "kratos-im/api/gateway"
 	"kratos-im/app/gateway/internal/conf"
 	"kratos-im/app/gateway/internal/service"
@@ -11,10 +13,13 @@ import (
 )
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server, gateway *service.GatewayService, logger log.Logger) *http.Server {
+func NewHTTPServer(c *conf.Server, auth *conf.Auth, gateway *service.GatewayService, logger log.Logger) *http.Server {
 	var opts = []http.ServerOption{
 		http.Middleware(
 			recovery.Recovery(),
+			jwt.Server(func(token *jwtv5.Token) (interface{}, error) {
+				return []byte(auth.Key), nil
+			}),
 		),
 	}
 	if c.Http.Network != "" {

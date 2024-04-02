@@ -27,14 +27,15 @@ func wireApp(confServer *conf.Server, confData *conf.Data, discovery *conf.Disco
 	broker := data.NewMQClient(confData, logger)
 	registryDiscovery := data.NewDiscovery(registry)
 	imClient := data.NewIMServiceClient(discovery, registryDiscovery)
-	dataData, cleanup, err := data.NewData(confData, logger, broker, imClient)
+	socialClient := data.NewSocialServiceClient(discovery, registryDiscovery)
+	dataData, cleanup, err := data.NewData(confData, logger, broker, imClient, socialClient)
 	if err != nil {
 		return nil, nil, err
 	}
 	gatewayRepo := data.NewGatewayRepo(dataData, logger)
 	gatewayUsecase := biz.NewGatewayUsecase(gatewayRepo, logger)
 	gatewayService := service.NewGatewayService(gatewayUsecase)
-	httpServer := server.NewHTTPServer(confServer, gatewayService, logger)
+	httpServer := server.NewHTTPServer(confServer, auth, gatewayService, logger)
 	rwsServer := server.NewWebsocketServer(confServer, auth, logger, gatewayService)
 	registrar := data.NewRegistrar(registry)
 	kratosApp := newApp(logger, httpServer, rwsServer, app, registrar)

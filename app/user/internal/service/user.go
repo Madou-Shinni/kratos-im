@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/redis/go-redis/v9"
 	v1 "kratos-im/api/user"
 	"kratos-im/app/user/internal/biz"

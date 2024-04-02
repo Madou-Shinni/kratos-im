@@ -2,6 +2,8 @@ package biz
 
 import (
 	"context"
+	v1 "kratos-im/api/gateway"
+	"kratos-im/common"
 	"kratos-im/model"
 	"kratos-im/pkg/rws"
 
@@ -41,4 +43,16 @@ func (uc *GatewayUsecase) CreateChatLog(ctx context.Context, data *rws.Chat) err
 		Status:         0,
 	}
 	return uc.repo.Save(ctx, chatLog)
+}
+
+func (uc *GatewayUsecase) GroupPutin(ctx context.Context, req *v1.GroupPutinReq) (*v1.GroupPutinResp, error) {
+	// 获取uid
+	uid, err := common.GetUidFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	uc.log.Info("GroupPutin uid: %s", uid)
+
+	return &v1.GroupPutinResp{}, nil
 }

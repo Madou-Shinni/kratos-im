@@ -2,9 +2,9 @@ package data
 
 import (
 	"context"
-	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
+	"github.com/go-kratos/kratos/contrib/registry/etcd/v2"
 	"github.com/go-kratos/kratos/v2/registry"
-	consulAPI "github.com/hashicorp/consul/api"
+	etcdv3 "go.etcd.io/etcd/client/v3"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"kratos-im/app/social/internal/biz"
@@ -17,7 +17,7 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewDB, NewSocialRepo, NewTransaction, NewDiscovery, NewRegistrar)
+var ProviderSet = wire.NewSet(NewData, NewDB, NewSocialRepo, NewTransaction, NewRegistrar)
 
 // Data .
 type Data struct {
@@ -98,26 +98,13 @@ func (d *Data) DB(ctx context.Context) *gorm.DB {
 	return d.db
 }
 
-func NewDiscovery(conf *conf.Registry) registry.Discovery {
-	c := consulAPI.DefaultConfig()
-	c.Address = conf.Consul.Address
-	c.Scheme = conf.Consul.Scheme
-	cli, err := consulAPI.NewClient(c)
-	if err != nil {
-		panic(err)
-	}
-	r := consul.New(cli, consul.WithHealthCheck(false))
-	return r
-}
-
 func NewRegistrar(conf *conf.Registry) registry.Registrar {
-	c := consulAPI.DefaultConfig()
-	c.Address = conf.Consul.Address
-	c.Scheme = conf.Consul.Scheme
-	cli, err := consulAPI.NewClient(c)
+	cfg := etcdv3.Config{
+		Endpoints: conf.Etcd.Endpoints,
+	}
+	cli, err := etcdv3.New(cfg)
 	if err != nil {
 		panic(err)
 	}
-	r := consul.New(cli, consul.WithHealthCheck(false))
-	return r
+	return etcd.New(cli)
 }

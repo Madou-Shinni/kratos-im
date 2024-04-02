@@ -2,10 +2,10 @@ package data
 
 import (
 	"context"
-	"github.com/go-kratos/kratos/contrib/registry/consul/v2"
+	"github.com/go-kratos/kratos/contrib/registry/etcd/v2"
 	"github.com/go-kratos/kratos/v2/registry"
-	consulAPI "github.com/hashicorp/consul/api"
 	"github.com/redis/go-redis/v9"
+	etcdv3 "go.etcd.io/etcd/client/v3"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"kratos-im/app/user/internal/conf"
@@ -96,13 +96,12 @@ func NewDB(conf *conf.Data, logger log.Logger) *gorm.DB {
 }
 
 func NewRegistrar(conf *conf.Registry) registry.Registrar {
-	c := consulAPI.DefaultConfig()
-	c.Address = conf.Consul.Address
-	c.Scheme = conf.Consul.Scheme
-	cli, err := consulAPI.NewClient(c)
+	cfg := etcdv3.Config{
+		Endpoints: conf.Etcd.Endpoints,
+	}
+	cli, err := etcdv3.New(cfg)
 	if err != nil {
 		panic(err)
 	}
-	r := consul.New(cli, consul.WithHealthCheck(false))
-	return r
+	return etcd.New(cli)
 }
