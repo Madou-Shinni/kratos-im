@@ -19,41 +19,41 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
-const OperationGatewaySayHello = "/api.gateway.Gateway/SayHello"
+const OperationGatewayGroupPutin = "/api.gateway.Gateway/GroupPutin"
 
 type GatewayHTTPServer interface {
-	SayHello(context.Context, *SayHelloRequest) (*SayHelloResponse, error)
+	GroupPutin(context.Context, *GroupPutinReq) (*GroupPutinResp, error)
 }
 
 func RegisterGatewayHTTPServer(s *http.Server, srv GatewayHTTPServer) {
 	r := s.Route("/")
-	r.GET("/say-hello/{name}", _Gateway_SayHello0_HTTP_Handler(srv))
+	r.PUT("/group/putin", _Gateway_GroupPutin0_HTTP_Handler(srv))
 }
 
-func _Gateway_SayHello0_HTTP_Handler(srv GatewayHTTPServer) func(ctx http.Context) error {
+func _Gateway_GroupPutin0_HTTP_Handler(srv GatewayHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in SayHelloRequest
+		var in GroupPutinReq
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		if err := ctx.BindVars(&in); err != nil {
-			return err
-		}
-		http.SetOperation(ctx, OperationGatewaySayHello)
+		http.SetOperation(ctx, OperationGatewayGroupPutin)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.SayHello(ctx, req.(*SayHelloRequest))
+			return srv.GroupPutin(ctx, req.(*GroupPutinReq))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
 			return err
 		}
-		reply := out.(*SayHelloResponse)
+		reply := out.(*GroupPutinResp)
 		return ctx.Result(200, reply)
 	}
 }
 
 type GatewayHTTPClient interface {
-	SayHello(ctx context.Context, req *SayHelloRequest, opts ...http.CallOption) (rsp *SayHelloResponse, err error)
+	GroupPutin(ctx context.Context, req *GroupPutinReq, opts ...http.CallOption) (rsp *GroupPutinResp, err error)
 }
 
 type GatewayHTTPClientImpl struct {
@@ -64,13 +64,13 @@ func NewGatewayHTTPClient(client *http.Client) GatewayHTTPClient {
 	return &GatewayHTTPClientImpl{client}
 }
 
-func (c *GatewayHTTPClientImpl) SayHello(ctx context.Context, in *SayHelloRequest, opts ...http.CallOption) (*SayHelloResponse, error) {
-	var out SayHelloResponse
-	pattern := "/say-hello/{name}"
-	path := binding.EncodeURL(pattern, in, true)
-	opts = append(opts, http.Operation(OperationGatewaySayHello))
+func (c *GatewayHTTPClientImpl) GroupPutin(ctx context.Context, in *GroupPutinReq, opts ...http.CallOption) (*GroupPutinResp, error) {
+	var out GroupPutinResp
+	pattern := "/group/putin"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationGatewayGroupPutin))
 	opts = append(opts, http.PathTemplate(pattern))
-	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

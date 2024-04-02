@@ -3,23 +3,58 @@ syntax = "proto3";
 package api.gateway;
 
 import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 
 option go_package = "kratos-im/api/gateway;gateway";
 option java_multiple_files = true;
 option java_package = "api.gateway";
 
-service Gateway {
-    rpc SayHello (SayHelloRequest) returns (SayHelloResponse) {
-      option (google.api.http) = {
-        get: "/say-hello/{name}"
-      };
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info : {
+    title : "kratos-im.api.gateway";
+    version : "1.0";
+  };
+  schemes : HTTP;
+  schemes : HTTPS;
+  security_definitions : {
+    security : {
+      key: "TokenAuth";
+      value: {
+        type: TYPE_API_KEY;
+        in: IN_HEADER;
+        name: "Authorization";
+        description: "用户认证,格式为: Bearer+空格+token";
+      }
     };
+  };
+};
+
+service Gateway {
+  rpc GroupPutin(GroupPutinReq) returns (GroupPutinResp) {
+    option (google.api.http) = {
+      put: "/group/putin"
+      body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "申请入群"
+      tags: ["group"]
+    };
+  }
 }
 
-message SayHelloRequest {
-    string name = 1;
+message GroupCreateResp {
+  uint64 id = 1;
 }
 
-message SayHelloResponse {
-    string message = 1;
+message GroupPutinReq {
+  uint64 groupId = 2;
+  string reqId = 3;
+  string reqMsg = 4;
+  int64  reqTime = 5;
+  int32  joinSource = 6;
+  string inviterUid = 7;
+}
+message GroupPutinResp {
+  uint64 groupId = 1;
 }

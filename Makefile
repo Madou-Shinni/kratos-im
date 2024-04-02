@@ -50,7 +50,9 @@ api:
  	       --go_out=paths=source_relative:./api \
  	       --go-http_out=paths=source_relative:./api \
  	       --go-grpc_out=paths=source_relative:./api \
-	       --openapi_out=fq_schema_naming=true,default_response=false:. \
+ 	       --openapiv2_out . \
+           --openapiv2_opt output_format=yaml \
+           --openapiv2_opt allow_merge=true,merge_file_name=openapiv2 \
 	       $(API_PROTO_FILES)
 
 .PHONY: build
