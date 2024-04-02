@@ -19,7 +19,11 @@ func NewHTTPServer(c *conf.Server, auth *conf.Auth, gateway *service.GatewayServ
 			recovery.Recovery(),
 			jwt.Server(func(token *jwtv5.Token) (interface{}, error) {
 				return []byte(auth.Key), nil
-			}),
+			},
+				jwt.WithSigningMethod(jwtv5.SigningMethodHS256),
+				jwt.WithClaims(func() jwtv5.Claims {
+					return jwtv5.MapClaims{}
+				})),
 		),
 	}
 	if c.Http.Network != "" {
