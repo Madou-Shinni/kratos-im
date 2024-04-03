@@ -7,12 +7,14 @@ import (
 	"kratos-im/constants"
 	"kratos-im/model"
 	"kratos-im/pkg/rws"
+	"strconv"
 )
 
 // ConsumerRepo is a Greater repo.
 type ConsumerRepo interface {
 	Save(ctx context.Context, chatLog model.ChatLog) error
 	UpdateMsg(ctx context.Context, chatLog *model.ChatLog) error
+	ListGroupMembersByGid(ctx context.Context, gid uint64) ([]*model.GroupMembers, error)
 }
 
 // ConsumerUsecase is a Consumer usecase.
@@ -59,7 +61,7 @@ func (u *ConsumerUsecase) HandleMsgTransfer(ctx context.Context, topic string, h
 	case constants.ChatTypeSingle:
 		return u.sendSingle(msg)
 	case constants.ChatTypeGroup:
-		return u.sendGroup()
+		return u.sendGroup(msg)
 	}
 
 	return nil
@@ -70,12 +72,32 @@ func (u *ConsumerUsecase) sendSingle(data *rws.MsgChatTransfer) error {
 		FrameType: rws.FrameData,
 		Method:    "push",
 		FromId:    constants.SystemRootUid,
-		//ToId:      "",
-		Data: data,
+		Data:      data,
 	})
 }
 
-func (u *ConsumerUsecase) sendGroup() error {
-	// TODO: 查询群用户
-	return nil
+func (u *ConsumerUsecase) sendGroup(data *rws.MsgChatTransfer) error {
+	// 查询群用户
+	gid, err := strconv.ParseUint(data.RecvId, 10, 64)
+	if err != nil {
+		return err
+	}
+	members, err := u.repo.ListGroupMembersByGid(context.Background(), gid)
+	if err != nil {
+		return err
+	}
+
+	var uids = make([]string, 0, len(members))
+	for _, v := range members {
+		uids = append(uids, v.UserId)
+	}
+
+	data.RecvIds = uids
+
+	return u.wsClient.Send(rws.Message{
+		FrameType: rws.FrameData,
+		Method:    "push",
+		FromId:    constants.SystemRootUid,
+		Data:      data,
+	})
 }

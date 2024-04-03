@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
+	"kratos-im/api/social"
 	"kratos-im/model"
 
 	"kratos-im/app/jobs/internal/biz"
@@ -41,4 +42,22 @@ func (r *consumerRepo) UpdateMsg(ctx context.Context, chatLog *model.ChatLog) er
 		},
 	)
 	return err
+}
+
+func (r *consumerRepo) ListGroupMembersByGid(ctx context.Context, gid uint64) ([]*model.GroupMembers, error) {
+	resp, err := r.data.socialClient.GroupUsers(ctx, &social.GroupUsersReq{GroupId: gid})
+	if err != nil {
+		return nil, err
+	}
+
+	var data = make([]*model.GroupMembers, 0, len(resp.List))
+
+	for _, user := range resp.List {
+		data = append(data, &model.GroupMembers{
+			GroupId: gid,
+			UserId:  user.UserId,
+		})
+	}
+
+	return data, nil
 }

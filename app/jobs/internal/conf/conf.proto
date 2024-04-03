@@ -9,7 +9,8 @@ message Bootstrap {
   Server server = 1;
   Data data = 2;
   Registry register = 3;
-  App app = 4;
+  Discovery discovery = 4;
+  App app = 5;
 }
 
 message Registry {
@@ -22,6 +23,13 @@ message Registry {
   }
   Consul consul = 1;
   Etcd etcd = 2;
+}
+
+message Discovery {
+  message Service {
+    string social = 1;
+  }
+  Service service = 1;
 }
 
 message App {
