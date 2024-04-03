@@ -46,20 +46,20 @@ func (s *SocialService) FriendList(ctx context.Context, req *pb.FriendListReq) (
 	return &pb.FriendListResp{List: list}, nil
 }
 func (s *SocialService) GroupCreate(ctx context.Context, req *pb.GroupCreateReq) (*pb.GroupCreateResp, error) {
-	return &pb.GroupCreateResp{}, nil
+	return s.uc.GroupCreate(ctx, req)
 }
 func (s *SocialService) GroupPutin(ctx context.Context, req *pb.GroupPutinReq) (*pb.GroupPutinResp, error) {
-	return &pb.GroupPutinResp{}, nil
+	return s.uc.GroupPutin(ctx, req)
 }
 func (s *SocialService) GroupPutinList(ctx context.Context, req *pb.GroupPutinListReq) (*pb.GroupPutinListResp, error) {
-	return &pb.GroupPutinListResp{}, nil
+	return s.uc.GroupPutinList(ctx, req)
 }
 func (s *SocialService) GroupPutInHandle(ctx context.Context, req *pb.GroupPutInHandleReq) (*pb.GroupPutInHandleResp, error) {
-	return &pb.GroupPutInHandleResp{}, nil
+	return s.uc.GroupPutInHandle(ctx, req)
 }
 func (s *SocialService) GroupList(ctx context.Context, req *pb.GroupListReq) (*pb.GroupListResp, error) {
-	return &pb.GroupListResp{}, nil
+	return s.uc.GroupList(ctx, req)
 }
 func (s *SocialService) GroupUsers(ctx context.Context, req *pb.GroupUsersReq) (*pb.GroupUsersResp, error) {
-	return &pb.GroupUsersResp{}, nil
+	return s.uc.GroupUsers(ctx, req)
 }

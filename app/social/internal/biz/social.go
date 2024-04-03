@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
+	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
 	"kratos-im/api/errorx"
 	pb "kratos-im/api/social"
@@ -16,6 +17,8 @@ import (
 var (
 	ErrorFriendReqRefuse = errorx.ErrorBus("好友申请已拒绝")
 	ErrorFriendReqAgree  = errorx.ErrorBus("好友申请已同意")
+	ErrorGroupReqAgree   = errorx.ErrorBus("群申请已同意")
+	ErrorGroupReqRefuse  = errorx.ErrorBus("群申请已拒绝")
 )
 
 // Social is a Social model.
@@ -37,9 +40,13 @@ type SocialRepo interface {
 	SaveGroup(ctx context.Context, data model.Groups) (uint64, error)
 	SaveGroupMember(ctx context.Context, data model.GroupMembers) error
 	FirstGroupMemberByGidUid(ctx context.Context, gid uint64, uid string) (*model.GroupMembers, error)
+	ListGroupMemberByGid(ctx context.Context, gid uint64) ([]*model.GroupMembers, error)
 	FirstGroupReqByGidUid(ctx context.Context, gid uint64, uid string) (*model.GroupRequests, error)
 	SaveGroupReq(ctx context.Context, data model.GroupRequests) (uint64, error)
 	FirstGroupById(ctx context.Context, id uint64) (*model.Groups, error)
+	FirstGroupReqById(ctx context.Context, id uint64) (*model.GroupRequests, error)
+	UpdateGroupReq(ctx context.Context, freq *model.GroupRequests) error
+	ListGroupReqByGid(ctx context.Context, groupId uint64) ([]*model.GroupRequests, error)
 }
 
 // SocialUsecase is a Social usecase.
@@ -305,4 +312,106 @@ func (uc *SocialUsecase) createGroupMember(ctx context.Context, req *pb.GroupPut
 	}
 
 	return nil
+}
+
+func (uc *SocialUsecase) GroupPutInHandle(ctx context.Context, req *pb.GroupPutInHandleReq) (*pb.GroupPutInHandleResp, error) {
+	// 查询群申请记录
+	greq, err := uc.repo.FirstGroupReqById(ctx, uint64(req.GroupReqId))
+	if err != nil {
+		return nil, err
+	}
+	// 验证是否有处理
+	switch greq.HandleResult {
+	case constants.HandleResultAgree:
+		return nil, ErrorGroupReqAgree
+	case constants.HandleResultRefuse:
+		return nil, ErrorGroupReqRefuse
+	case constants.HandleResultNone:
+	default:
+	}
+
+	greq.HandleResult = constants.HandleResult(req.HandleResult)
+	greq.HandleTime = sql.NullTime{
+		Time:  time.Now(),
+		Valid: true,
+	}
+	err = uc.tx.ExecTx(ctx, func(ctx context.Context) error {
+		// 更新群申请记录
+		err = uc.repo.UpdateGroupReq(ctx, greq)
+		if err != nil {
+			return err
+		}
+		// 同意添加群成员
+		if constants.HandleResult(req.HandleResult) == constants.HandleResultAgree {
+			err = uc.repo.SaveGroupMember(ctx, model.GroupMembers{
+				UserId:      greq.ReqId,
+				GroupId:     greq.GroupId,
+				RoleLevel:   constants.AtLargeGroupRoleLevel,
+				JoinTime:    time.Now(),
+				JoinSource:  greq.JoinSource,
+				InviterUid:  greq.InviterUserId,
+				OperatorUid: greq.HandleUserId,
+			})
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GroupPutInHandleResp{
+		GroupId: req.GroupId,
+	}, nil
+}
+
+func (uc *SocialUsecase) GroupPutinList(ctx context.Context, req *pb.GroupPutinListReq) (*pb.GroupPutinListResp, error) {
+	groupReqs, err := uc.repo.ListGroupReqByGid(ctx, req.GroupId)
+	if err != nil {
+		return nil, err
+	}
+
+	var list []*pb.GroupRequests
+
+	err = copier.Copy(&groupReqs, &groupReqs)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GroupPutinListResp{List: list}, nil
+}
+
+func (uc *SocialUsecase) GroupList(ctx context.Context, req *pb.GroupListReq) (*pb.GroupListResp, error) {
+	groups, err := uc.repo.ListGroupByUid(ctx, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	var list []*pb.Groups
+	err = copier.Copy(&list, &groups)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GroupListResp{List: list}, nil
+}
+
+func (uc *SocialUsecase) GroupUsers(ctx context.Context, req *pb.GroupUsersReq) (*pb.GroupUsersResp, error) {
+	groupMembers, err := uc.repo.ListGroupMemberByGid(ctx, req.GroupId)
+	if err != nil {
+		return nil, err
+	}
+
+	var list = make([]*pb.GroupMembers, 0, len(groupMembers))
+
+	err = copier.Copy(&list, &groupMembers)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GroupUsersResp{
+		List: list,
+	}, nil
 }

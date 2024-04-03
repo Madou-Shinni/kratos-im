@@ -134,6 +134,16 @@ func (r *socialRepo) SaveGroupMember(ctx context.Context, data model.GroupMember
 	return r.data.DB(ctx).Create(&data).Error
 }
 
+// ListGroupMemberByGid 通过gid查询群成员列表
+func (r *socialRepo) ListGroupMemberByGid(ctx context.Context, gid uint64) ([]*model.GroupMembers, error) {
+	var data []*model.GroupMembers
+	err := r.data.db.Find(&data, "group_id = ?", gid).Error
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
 // FirstGroupMemberByGidUid 通过gid,uid查询群成员
 func (r *socialRepo) FirstGroupMemberByGidUid(ctx context.Context, gid uint64, uid string) (*model.GroupMembers, error) {
 	var data *model.GroupMembers
@@ -152,4 +162,33 @@ func (r *socialRepo) FirstGroupReqByGidUid(ctx context.Context, gid uint64, uid 
 		return nil, err
 	}
 	return &data, nil
+}
+
+// FirstGroupReqById 通过id查询入群申请
+func (r *socialRepo) FirstGroupReqById(ctx context.Context, id uint64) (*model.GroupRequests, error) {
+	var data *model.GroupRequests
+	err := r.data.db.First(&data, "id = ?", id).Error
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+// UpdateGroupReq 更新群申请
+func (r *socialRepo) UpdateGroupReq(ctx context.Context, freq *model.GroupRequests) error {
+	err := r.data.db.Model(&model.GroupRequests{}).Where("id = ?", freq.ID).Save(freq).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// ListGroupReqByGid 通过gid查询入群申请
+func (r *socialRepo) ListGroupReqByGid(ctx context.Context, gid uint64) ([]*model.GroupRequests, error) {
+	var data []*model.GroupRequests
+	err := r.data.db.Find(&data, "group_id = ?", gid).Error
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
