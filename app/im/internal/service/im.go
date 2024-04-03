@@ -69,5 +69,5 @@ func (s *IMService) PutConversations(ctx context.Context, req *pb.PutConversatio
 	return s.uc.PutConversations(ctx, req)
 }
 func (s *IMService) CreateGroupConversation(ctx context.Context, req *pb.CreateGroupConversationReq) (*pb.CreateGroupConversationResp, error) {
-	return &pb.CreateGroupConversationResp{}, nil
+	return s.uc.CreateGroupConversation(ctx, req)
 }

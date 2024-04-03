@@ -164,13 +164,17 @@ func (uc *IMUsecase) PutConversations(ctx context.Context, req *pb.PutConversati
 func (uc *IMUsecase) CreateGroupConversation(ctx context.Context, req *pb.CreateGroupConversationReq) (*pb.CreateGroupConversationResp, error) {
 	res := &pb.CreateGroupConversationResp{}
 	// 查询会话是否存在
-	_, err := uc.repo.FindConversationOne(ctx, req.GroupId)
+	data, err := uc.repo.FindConversationOne(ctx, req.GroupId)
 	if err == nil {
 		return res, nil
 	}
 
 	if !errors.Is(err, mongo.ErrNoDocuments) {
 		return nil, err
+	}
+
+	if data != nil {
+		return res, err
 	}
 
 	// 添加群会话
@@ -229,7 +233,7 @@ func (uc *IMUsecase) SetUpUserConversation(ctx context.Context, req *pb.SetUpUse
 			return nil, err
 		}
 	case constants.ChatTypeGroup: // 群聊
-		err := uc.setUpUserConversation(ctx, req.RecvId, req.SendId, req.SendId, constants.ChatTypeSingle, false) // 接收方不显示会话
+		err := uc.setUpUserConversation(ctx, req.RecvId, req.SendId, req.SendId, constants.ChatTypeGroup, false) // 接收方不显示会话
 		if err != nil {
 			return nil, err
 		}

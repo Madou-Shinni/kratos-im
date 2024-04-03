@@ -30,6 +30,20 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 };
 
 service Gateway {
+  // 创建群
+  rpc GroupCreate(GroupCreateReq) returns (GroupCreateResp) {
+    option (google.api.http) = {
+      post: "/group/create"
+      body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "创建群"
+      tags: ["social"]
+    };
+  }
+
+  // 申请入群
   rpc GroupPutin(GroupPutinReq) returns (GroupPutinResp) {
     option (google.api.http) = {
       put: "/group/putin"
@@ -38,9 +52,66 @@ service Gateway {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       summary: "申请入群"
-      tags: ["group"]
+      tags: ["social"]
     };
   }
+
+  // 好友申请
+  rpc FriendPutIn(FriendPutInReq) returns(FriendPutInResp) {
+    option (google.api.http) = {
+      put: "/friend/putin"
+      body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "好友申请"
+      tags: ["social"]
+    };
+  }
+
+  // 好友申请处理
+  rpc FriendPutInHandle(FriendPutInHandleReq) returns(FriendPutInHandleResp) {
+    option (google.api.http) = {
+      put: "/friend/putin/handle"
+      body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "好友申请处理"
+      tags: ["social"]
+    };
+  }
+
+  // 好友申请列表
+  rpc FriendPutInList(FriendPutInListReq) returns(FriendPutInListResp) {
+    option (google.api.http) = {
+      get: "/friend/putin/list"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "好友申请列表"
+      tags: ["social"]
+    };
+  }
+
+  // 好友列表
+  rpc FriendList(FriendListReq) returns (FriendListResp) {
+    option (google.api.http) = {
+      get: "/friend/list"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "好友列表"
+      tags: ["social"]
+    };
+  }
+}
+
+message GroupCreateReq {
+  string name = 2;
+  string icon = 3;
+  int32  status = 4;
+  string creator_uid = 5;
 }
 
 message GroupCreateResp {
@@ -57,4 +128,124 @@ message GroupPutinReq {
 }
 message GroupPutinResp {
   uint64 groupId = 1;
+}
+
+// model
+message Friends {
+  int32  id = 1;
+  string userId = 2;
+  string remark = 3;
+  int32  addSource = 4; // 添加来源
+  string friendUid = 5;
+}
+
+message FriendRequests {
+  int32  id = 1;
+  string userId = 2;
+  string reqUid = 3;
+  string reqMsg = 4;
+  int64  reqTime = 5;
+  int32  handleResult = 6; // 处理结果
+}
+
+message Groups {
+  string id = 1;
+  string name = 2;
+  string icon = 3;
+  int32  status = 4;
+  string creator_uid = 5;
+  int32  groupType = 6;
+  bool   isVerify = 7;
+  string notification = 8; // 公告通知
+  string notificationUid = 9;
+}
+
+message GroupMembers {
+  int32  id = 1;
+  uint64 groupId = 2;
+  string userId = 3;
+  int32  roleLevel = 6;
+  int64  joinTime = 7;
+  int32  joinSource = 8;
+  string inviterUid = 9;
+  string operatorUid = 10;
+}
+
+message GroupRequests {
+  int32  id = 1;
+  string groupId = 2;
+  string reqId = 3;
+  string reqMsg = 4;
+  int64  reqTime = 5;
+  int32  joinSource = 6;
+  string inviterUid = 7;
+  string handleUid = 8;
+  int32  handleResult = 9; // 处理结果
+}
+
+// req resp
+
+message FriendPutInReq {
+  string userId = 2;
+  string reqUid = 3;
+  string reqMsg = 4;
+  int64  reqTime = 5;
+}
+message FriendPutInResp {}
+
+message FriendPutInHandleReq {
+  int32  friendReqId = 1;
+  string userId = 2;
+  int32 handleResult = 3; // 处理结果
+}
+message FriendPutInHandleResp {}
+
+message FriendPutInListReq{
+}
+
+message FriendPutInListResp{
+  repeated FriendRequests list = 1;
+}
+
+message FriendListReq{
+}
+
+message FriendListResp{
+  repeated Friends list = 1;
+}
+
+// 群
+
+message GroupPutinListReq {
+  uint64 groupId = 1;
+}
+message GroupPutinListResp {
+  repeated GroupRequests list = 1;
+}
+
+message GroupPutInHandleReq {
+  int32  groupReqId = 1;
+  uint64 groupId = 2;
+  string handleUid = 3;
+  int32  handleResult = 4; // 处理结果
+
+  string username = 6;
+  string userAvatarUrl = 7;
+}
+message GroupPutInHandleResp {
+  uint64 groupId = 1;
+}
+
+message GroupListReq{
+  string userId = 1;
+}
+message GroupListResp{
+  repeated Groups list = 1;
+}
+
+message GroupUsersReq {
+  uint64 groupId = 1;
+}
+message GroupUsersResp {
+  repeated GroupMembers List = 1;
 }
