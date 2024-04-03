@@ -8,7 +8,7 @@ import (
 
 func TestGenToken(t *testing.T) {
 	token, err := GenToken(jwt.MapClaims{
-		"userId": "9aec6f89-c1b6-4d85-b64d-66cf211a007f",
+		"userId": "6736fd5e-cac4-4d33-863b-78904382ad96",
 	}, time.Hour*24*30,
 		"tkP2yq!i=oamTR#oQ:8n")
 	if err != nil {

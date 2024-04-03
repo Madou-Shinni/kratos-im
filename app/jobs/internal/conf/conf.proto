@@ -9,7 +9,7 @@ message Bootstrap {
   Server server = 1;
   Data data = 2;
   Registry register = 3;
-  Discovery discovery = 4;
+  Discovery discoverer = 4;
   App app = 5;
 }
 

@@ -86,7 +86,7 @@ func (uc *SocialUsecase) FriendPutIn(ctx context.Context, req *pb.FriendPutInReq
 		UserId:       req.UserId,
 		ReqUid:       req.ReqUid,
 		ReqMsg:       req.ReqMsg,
-		ReqTime:      time.Unix(req.ReqTime, 0),
+		ReqTime:      time.Now(),
 		HandleResult: constants.HandleResultNone,
 	})
 	if err != nil {

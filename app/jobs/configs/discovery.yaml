@@ -1,0 +1,3 @@
+discoverer:
+  service:
+    social: kratos-im:social-service

@@ -1,0 +1,548 @@
+swagger: "2.0"
+info:
+  title: kratos-im.api.gateway
+  version: "1.0"
+tags:
+  - name: Gateway
+  - name: IM
+  - name: Social
+  - name: User
+schemes:
+  - http
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /friend/list:
+    get:
+      summary: 好友列表
+      operationId: Gateway_FriendList
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apigatewayFriendListResp'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - social
+  /friend/putin:
+    put:
+      summary: 好友申请
+      operationId: Gateway_FriendPutIn
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apigatewayFriendPutInResp'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/apigatewayFriendPutInReq'
+      tags:
+        - social
+  /friend/putin/handle:
+    put:
+      summary: 好友申请处理
+      operationId: Gateway_FriendPutInHandle
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apigatewayFriendPutInHandleResp'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/apigatewayFriendPutInHandleReq'
+      tags:
+        - social
+  /friend/putin/list:
+    get:
+      summary: 好友申请列表
+      operationId: Gateway_FriendPutInList
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apigatewayFriendPutInListResp'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - social
+  /group/create:
+    post:
+      summary: 创建群
+      operationId: Gateway_GroupCreate
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apigatewayGroupCreateResp'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/apigatewayGroupCreateReq'
+      tags:
+        - social
+  /group/putin:
+    put:
+      summary: 申请入群
+      operationId: Gateway_GroupPutin
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apigatewayGroupPutinResp'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/apigatewayGroupPutinReq'
+      tags:
+        - social
+definitions:
+  LoginReplyUserInfo:
+    type: object
+    properties:
+      token:
+        type: string
+      userId:
+        type: string
+      username:
+        type: string
+      avatar:
+        type: string
+      nickname:
+        type: string
+  apigatewayFriendListResp:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/apigatewayFriends'
+  apigatewayFriendPutInHandleReq:
+    type: object
+    properties:
+      friendReqId:
+        type: integer
+        format: int32
+      userId:
+        type: string
+      handleResult:
+        type: integer
+        format: int32
+        title: 处理结果
+  apigatewayFriendPutInHandleResp:
+    type: object
+  apigatewayFriendPutInListResp:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/apigatewayFriendRequests'
+  apigatewayFriendPutInReq:
+    type: object
+    properties:
+      userId:
+        type: string
+      reqUid:
+        type: string
+      reqMsg:
+        type: string
+      reqTime:
+        type: string
+        format: int64
+  apigatewayFriendPutInResp:
+    type: object
+  apigatewayFriendRequests:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int32
+      userId:
+        type: string
+      reqUid:
+        type: string
+      reqMsg:
+        type: string
+      reqTime:
+        type: string
+        format: int64
+      handleResult:
+        type: integer
+        format: int32
+        title: 处理结果
+  apigatewayFriends:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int32
+      userId:
+        type: string
+      remark:
+        type: string
+      addSource:
+        type: integer
+        format: int32
+        title: 添加来源
+      friendUid:
+        type: string
+    title: model
+  apigatewayGroupCreateReq:
+    type: object
+    properties:
+      name:
+        type: string
+      icon:
+        type: string
+      status:
+        type: integer
+        format: int32
+      creatorUid:
+        type: string
+  apigatewayGroupCreateResp:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+  apigatewayGroupPutinReq:
+    type: object
+    properties:
+      groupId:
+        type: string
+        format: uint64
+      reqId:
+        type: string
+      reqMsg:
+        type: string
+      reqTime:
+        type: string
+        format: int64
+      joinSource:
+        type: integer
+        format: int32
+      inviterUid:
+        type: string
+  apigatewayGroupPutinResp:
+    type: object
+    properties:
+      groupId:
+        type: string
+        format: uint64
+  apisocialFriendListResp:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/apisocialFriends'
+  apisocialFriendPutInHandleResp:
+    type: object
+  apisocialFriendPutInListResp:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/apisocialFriendRequests'
+  apisocialFriendPutInResp:
+    type: object
+  apisocialFriendRequests:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int32
+      userId:
+        type: string
+      reqUid:
+        type: string
+      reqMsg:
+        type: string
+      reqTime:
+        type: string
+        format: int64
+      handleResult:
+        type: integer
+        format: int32
+        title: 处理结果
+  apisocialFriends:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int32
+      userId:
+        type: string
+      remark:
+        type: string
+      addSource:
+        type: integer
+        format: int32
+        title: 添加来源
+      friendUid:
+        type: string
+    title: model
+  apisocialGroupCreateResp:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+  apisocialGroupListResp:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/apisocialGroups'
+  apisocialGroupMembers:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int32
+      groupId:
+        type: string
+        format: uint64
+      userId:
+        type: string
+      roleLevel:
+        type: integer
+        format: int32
+      joinTime:
+        type: string
+        format: int64
+      joinSource:
+        type: integer
+        format: int32
+      inviterUid:
+        type: string
+      operatorUid:
+        type: string
+  apisocialGroupPutInHandleResp:
+    type: object
+    properties:
+      groupId:
+        type: string
+        format: uint64
+  apisocialGroupPutinListResp:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/apisocialGroupRequests'
+  apisocialGroupPutinResp:
+    type: object
+    properties:
+      groupId:
+        type: string
+        format: uint64
+  apisocialGroupRequests:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int32
+      groupId:
+        type: string
+      reqId:
+        type: string
+      reqMsg:
+        type: string
+      reqTime:
+        type: string
+        format: int64
+      joinSource:
+        type: integer
+        format: int32
+      inviterUid:
+        type: string
+      handleUid:
+        type: string
+      handleResult:
+        type: integer
+        format: int32
+        title: 处理结果
+  apisocialGroupUsersResp:
+    type: object
+    properties:
+      List:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/apisocialGroupMembers'
+  apisocialGroups:
+    type: object
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      icon:
+        type: string
+      status:
+        type: integer
+        format: int32
+      creatorUid:
+        type: string
+      groupType:
+        type: integer
+        format: int32
+      isVerify:
+        type: boolean
+      notification:
+        type: string
+        title: 公告通知
+      notificationUid:
+        type: string
+  imChatLog:
+    type: object
+    properties:
+      id:
+        type: string
+      conversationId:
+        type: string
+      sendId:
+        type: string
+      recvId:
+        type: string
+      msgType:
+        type: integer
+        format: int32
+      msgContent:
+        type: string
+      chatType:
+        type: integer
+        format: int32
+      SendTime:
+        type: string
+        format: int64
+      readRecords:
+        type: string
+        format: byte
+  imConversation:
+    type: object
+    properties:
+      conversationId:
+        type: string
+      chatType:
+        type: integer
+        format: int32
+      targetId:
+        type: string
+      isShow:
+        type: boolean
+      seq:
+        type: string
+        format: int64
+      total:
+        type: integer
+        format: int32
+        title: 总消息数
+      toRead:
+        type: integer
+        format: int32
+        title: 未读消息数
+      Read:
+        type: integer
+        format: int32
+        title: 已读消息
+      msg:
+        $ref: '#/definitions/imChatLog'
+  imCreateChatLogResp:
+    type: object
+  imCreateGroupConversationResp:
+    type: object
+  imGetChatLogResp:
+    type: object
+    properties:
+      List:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/imChatLog'
+  imGetConversationsResp:
+    type: object
+    properties:
+      conversationList:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/imConversation'
+  imPutConversationsResp:
+    type: object
+  imSetUpUserConversationResp:
+    type: object
+  protobufAny:
+    type: object
+    properties:
+      '@type':
+        type: string
+    additionalProperties: {}
+  rpcStatus:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      details:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/protobufAny'
+  userLoginReply:
+    type: object
+    properties:
+      userInfo:
+        $ref: '#/definitions/LoginReplyUserInfo'
+      token:
+        type: string
+securityDefinitions:
+  TokenAuth:
+    type: apiKey
+    description: '用户认证,格式为: Bearer+空格+token'
+    name: Authorization
+    in: header

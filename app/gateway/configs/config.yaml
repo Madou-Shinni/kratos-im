@@ -10,3 +10,5 @@ data:
   kafka:
     brokers:
       - 127.0.0.1:9092
+auth:
+  key: tkP2yq!i=oamTR#oQ:8n
