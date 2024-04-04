@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"kratos-im/api/social"
 	"kratos-im/model"
 
@@ -60,4 +61,41 @@ func (r *consumerRepo) ListGroupMembersByGid(ctx context.Context, gid uint64) ([
 	}
 
 	return data, nil
+}
+
+// ListChatLogByIds 根据ids查询聊天记录
+func (r *consumerRepo) ListChatLogByIds(ctx context.Context, msgids []string) ([]*model.ChatLog, error) {
+	var data = make([]*model.ChatLog, 0, len(msgids))
+	ids := make([]primitive.ObjectID, 0, len(msgids))
+	for _, msgid := range msgids {
+		oid, err := primitive.ObjectIDFromHex(msgid)
+		if err != nil {
+			return nil, err
+		}
+		ids = append(ids, oid)
+	}
+
+	cur, err := r.data.mongoDatabase.Collection(model.ChatLog{}.Collection()).Find(ctx,
+		bson.M{"_id": bson.M{
+			"$in": ids,
+		}})
+	if err != nil {
+		return nil, err
+	}
+
+	err = cur.All(ctx, &data)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+// UpdateRead 更新已读
+func (r *consumerRepo) UpdateRead(ctx context.Context, id primitive.ObjectID, readRecords []byte) error {
+	_, err := r.data.mongoDatabase.Collection(model.ChatLog{}.Collection()).UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": bson.M{"readRecords": readRecords}})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

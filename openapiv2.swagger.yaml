@@ -207,6 +207,26 @@ paths:
           format: uint64
       tags:
         - social
+  /read-chat-records/list:
+    get:
+      summary: 获取消息已读记录
+      operationId: Gateway_GetReadChatRecords
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/gatewayGetReadChatRecordsResp'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: msgId
+          in: query
+          required: false
+          type: string
+      tags:
+        - im
 definitions:
   LoginReplyUserInfo:
     type: object
@@ -620,6 +640,17 @@ definitions:
         title: 公告通知
       notificationUid:
         type: string
+  gatewayGetReadChatRecordsResp:
+    type: object
+    properties:
+      reads:
+        type: array
+        items:
+          type: string
+      unReads:
+        type: array
+        items:
+          type: string
   imChatLog:
     type: object
     properties:

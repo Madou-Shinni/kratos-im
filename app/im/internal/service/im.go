@@ -51,7 +51,7 @@ func (s *IMService) GetChatLog(ctx context.Context, req *pb.GetChatLogReq) (*pb.
 			MsgContent:     v.MsgContent,
 			ChatType:       int32(v.ChatType),
 			SendTime:       v.SendTime,
-			ReadRecords:    nil,
+			ReadRecords:    v.ReadRecords,
 		})
 	}
 

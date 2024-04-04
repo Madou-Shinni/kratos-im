@@ -204,6 +204,18 @@ service Gateway {
 //      tags: ["im"]
 //    };
 //  }
+
+    // 获取消息已读记录
+  rpc GetReadChatRecords(GetReadChatRecordsReq) returns(GetReadChatRecordsResp) {
+    option (google.api.http) = {
+      get: "/read-chat-records/list"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "获取消息已读记录"
+      tags: ["im"]
+    };
+  }
 }
 
 // model
@@ -337,4 +349,13 @@ message GroupUsersReq {
 }
 message GroupUsersResp {
   repeated GroupMembers List = 1;
+}
+
+message GetReadChatRecordsReq {
+  string msg_id = 1;
+}
+
+message GetReadChatRecordsResp {
+  repeated string reads = 1;
+  repeated string un_reads = 2;
 }

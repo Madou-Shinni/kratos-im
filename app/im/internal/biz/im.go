@@ -21,7 +21,7 @@ type IMRepo interface {
 	Save(ctx context.Context, chatLog model.ChatLog) error
 	ListBySendTime(ctx context.Context, conversationId string, startSendTime, endSendTime, count int64) ([]*model.ChatLog, error)
 	FindConversationOne(ctx context.Context, id string) (*model.Conversation, error)
-	FindChatLogOne(ctx context.Context, id string) (*model.ChatLog, error)
+	FindChatLogOne(ctx context.Context, id primitive.ObjectID) (*model.ChatLog, error)
 	ListByConversationIds(ctx context.Context, ids []string) ([]*model.Conversation, error)
 	ConversationsByUserId(ctx context.Context, uid string) (*model.Conversations, error)
 	UpdateMsg(ctx context.Context, chatLog *model.ChatLog) error
@@ -59,7 +59,8 @@ func (uc *IMUsecase) GetChatLog(ctx context.Context, req *pb.GetChatLogReq) ([]*
 
 	// 根据id查询聊天记录
 	if req.MsgId != "" {
-		one, err := uc.repo.FindChatLogOne(ctx, req.MsgId)
+		mid, _ := primitive.ObjectIDFromHex(req.MsgId)
+		one, err := uc.repo.FindChatLogOne(ctx, mid)
 		if err != nil {
 			if errors.Is(err, mongo.ErrNoDocuments) {
 				return chatLogList, err

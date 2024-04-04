@@ -19,16 +19,17 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Gateway_GroupCreate_FullMethodName       = "/api.gateway.Gateway/GroupCreate"
-	Gateway_GroupPutin_FullMethodName        = "/api.gateway.Gateway/GroupPutin"
-	Gateway_GroupPutinList_FullMethodName    = "/api.gateway.Gateway/GroupPutinList"
-	Gateway_GroupPutInHandle_FullMethodName  = "/api.gateway.Gateway/GroupPutInHandle"
-	Gateway_GroupList_FullMethodName         = "/api.gateway.Gateway/GroupList"
-	Gateway_GroupUsers_FullMethodName        = "/api.gateway.Gateway/GroupUsers"
-	Gateway_FriendPutIn_FullMethodName       = "/api.gateway.Gateway/FriendPutIn"
-	Gateway_FriendPutInHandle_FullMethodName = "/api.gateway.Gateway/FriendPutInHandle"
-	Gateway_FriendPutInList_FullMethodName   = "/api.gateway.Gateway/FriendPutInList"
-	Gateway_FriendList_FullMethodName        = "/api.gateway.Gateway/FriendList"
+	Gateway_GroupCreate_FullMethodName        = "/api.gateway.Gateway/GroupCreate"
+	Gateway_GroupPutin_FullMethodName         = "/api.gateway.Gateway/GroupPutin"
+	Gateway_GroupPutinList_FullMethodName     = "/api.gateway.Gateway/GroupPutinList"
+	Gateway_GroupPutInHandle_FullMethodName   = "/api.gateway.Gateway/GroupPutInHandle"
+	Gateway_GroupList_FullMethodName          = "/api.gateway.Gateway/GroupList"
+	Gateway_GroupUsers_FullMethodName         = "/api.gateway.Gateway/GroupUsers"
+	Gateway_FriendPutIn_FullMethodName        = "/api.gateway.Gateway/FriendPutIn"
+	Gateway_FriendPutInHandle_FullMethodName  = "/api.gateway.Gateway/FriendPutInHandle"
+	Gateway_FriendPutInList_FullMethodName    = "/api.gateway.Gateway/FriendPutInList"
+	Gateway_FriendList_FullMethodName         = "/api.gateway.Gateway/FriendList"
+	Gateway_GetReadChatRecords_FullMethodName = "/api.gateway.Gateway/GetReadChatRecords"
 )
 
 // GatewayClient is the client API for Gateway service.
@@ -55,6 +56,8 @@ type GatewayClient interface {
 	FriendPutInList(ctx context.Context, in *FriendPutInListReq, opts ...grpc.CallOption) (*FriendPutInListResp, error)
 	// 好友列表
 	FriendList(ctx context.Context, in *FriendListReq, opts ...grpc.CallOption) (*FriendListResp, error)
+	// 获取消息已读记录
+	GetReadChatRecords(ctx context.Context, in *GetReadChatRecordsReq, opts ...grpc.CallOption) (*GetReadChatRecordsResp, error)
 }
 
 type gatewayClient struct {
@@ -155,6 +158,15 @@ func (c *gatewayClient) FriendList(ctx context.Context, in *FriendListReq, opts 
 	return out, nil
 }
 
+func (c *gatewayClient) GetReadChatRecords(ctx context.Context, in *GetReadChatRecordsReq, opts ...grpc.CallOption) (*GetReadChatRecordsResp, error) {
+	out := new(GetReadChatRecordsResp)
+	err := c.cc.Invoke(ctx, Gateway_GetReadChatRecords_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GatewayServer is the server API for Gateway service.
 // All implementations must embed UnimplementedGatewayServer
 // for forward compatibility
@@ -179,6 +191,8 @@ type GatewayServer interface {
 	FriendPutInList(context.Context, *FriendPutInListReq) (*FriendPutInListResp, error)
 	// 好友列表
 	FriendList(context.Context, *FriendListReq) (*FriendListResp, error)
+	// 获取消息已读记录
+	GetReadChatRecords(context.Context, *GetReadChatRecordsReq) (*GetReadChatRecordsResp, error)
 	mustEmbedUnimplementedGatewayServer()
 }
 
@@ -215,6 +229,9 @@ func (UnimplementedGatewayServer) FriendPutInList(context.Context, *FriendPutInL
 }
 func (UnimplementedGatewayServer) FriendList(context.Context, *FriendListReq) (*FriendListResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FriendList not implemented")
+}
+func (UnimplementedGatewayServer) GetReadChatRecords(context.Context, *GetReadChatRecordsReq) (*GetReadChatRecordsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReadChatRecords not implemented")
 }
 func (UnimplementedGatewayServer) mustEmbedUnimplementedGatewayServer() {}
 
@@ -409,6 +426,24 @@ func _Gateway_FriendList_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Gateway_GetReadChatRecords_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReadChatRecordsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).GetReadChatRecords(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_GetReadChatRecords_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).GetReadChatRecords(ctx, req.(*GetReadChatRecordsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Gateway_ServiceDesc is the grpc.ServiceDesc for Gateway service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -455,6 +490,10 @@ var Gateway_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "FriendList",
 			Handler:    _Gateway_FriendList_Handler,
+		},
+		{
+			MethodName: "GetReadChatRecords",
+			Handler:    _Gateway_GetReadChatRecords_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -23,6 +23,7 @@ const OperationGatewayFriendList = "/api.gateway.Gateway/FriendList"
 const OperationGatewayFriendPutIn = "/api.gateway.Gateway/FriendPutIn"
 const OperationGatewayFriendPutInHandle = "/api.gateway.Gateway/FriendPutInHandle"
 const OperationGatewayFriendPutInList = "/api.gateway.Gateway/FriendPutInList"
+const OperationGatewayGetReadChatRecords = "/api.gateway.Gateway/GetReadChatRecords"
 const OperationGatewayGroupCreate = "/api.gateway.Gateway/GroupCreate"
 const OperationGatewayGroupList = "/api.gateway.Gateway/GroupList"
 const OperationGatewayGroupPutInHandle = "/api.gateway.Gateway/GroupPutInHandle"
@@ -39,6 +40,8 @@ type GatewayHTTPServer interface {
 	FriendPutInHandle(context.Context, *FriendPutInHandleReq) (*FriendPutInHandleResp, error)
 	// FriendPutInList 好友申请列表
 	FriendPutInList(context.Context, *FriendPutInListReq) (*FriendPutInListResp, error)
+	// GetReadChatRecords 获取消息已读记录
+	GetReadChatRecords(context.Context, *GetReadChatRecordsReq) (*GetReadChatRecordsResp, error)
 	// GroupCreate 创建群
 	GroupCreate(context.Context, *GroupCreateReq) (*GroupCreateResp, error)
 	// GroupList 群列表
@@ -65,6 +68,7 @@ func RegisterGatewayHTTPServer(s *http.Server, srv GatewayHTTPServer) {
 	r.PUT("/friend/putin/handle", _Gateway_FriendPutInHandle0_HTTP_Handler(srv))
 	r.GET("/friend/putin/list", _Gateway_FriendPutInList0_HTTP_Handler(srv))
 	r.GET("/friend/list", _Gateway_FriendList0_HTTP_Handler(srv))
+	r.GET("/read-chat-records/list", _Gateway_GetReadChatRecords0_HTTP_Handler(srv))
 }
 
 func _Gateway_GroupCreate0_HTTP_Handler(srv GatewayHTTPServer) func(ctx http.Context) error {
@@ -272,11 +276,31 @@ func _Gateway_FriendList0_HTTP_Handler(srv GatewayHTTPServer) func(ctx http.Cont
 	}
 }
 
+func _Gateway_GetReadChatRecords0_HTTP_Handler(srv GatewayHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetReadChatRecordsReq
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationGatewayGetReadChatRecords)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetReadChatRecords(ctx, req.(*GetReadChatRecordsReq))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetReadChatRecordsResp)
+		return ctx.Result(200, reply)
+	}
+}
+
 type GatewayHTTPClient interface {
 	FriendList(ctx context.Context, req *FriendListReq, opts ...http.CallOption) (rsp *FriendListResp, err error)
 	FriendPutIn(ctx context.Context, req *FriendPutInReq, opts ...http.CallOption) (rsp *FriendPutInResp, err error)
 	FriendPutInHandle(ctx context.Context, req *FriendPutInHandleReq, opts ...http.CallOption) (rsp *FriendPutInHandleResp, err error)
 	FriendPutInList(ctx context.Context, req *FriendPutInListReq, opts ...http.CallOption) (rsp *FriendPutInListResp, err error)
+	GetReadChatRecords(ctx context.Context, req *GetReadChatRecordsReq, opts ...http.CallOption) (rsp *GetReadChatRecordsResp, err error)
 	GroupCreate(ctx context.Context, req *GroupCreateReq, opts ...http.CallOption) (rsp *GroupCreateResp, err error)
 	GroupList(ctx context.Context, req *GroupListReq, opts ...http.CallOption) (rsp *GroupListResp, err error)
 	GroupPutInHandle(ctx context.Context, req *GroupPutInHandleReq, opts ...http.CallOption) (rsp *GroupPutInHandleResp, err error)
@@ -337,6 +361,19 @@ func (c *GatewayHTTPClientImpl) FriendPutInList(ctx context.Context, in *FriendP
 	pattern := "/friend/putin/list"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationGatewayFriendPutInList))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *GatewayHTTPClientImpl) GetReadChatRecords(ctx context.Context, in *GetReadChatRecordsReq, opts ...http.CallOption) (*GetReadChatRecordsResp, error) {
+	var out GetReadChatRecordsResp
+	pattern := "/read-chat-records/list"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationGatewayGetReadChatRecords))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {

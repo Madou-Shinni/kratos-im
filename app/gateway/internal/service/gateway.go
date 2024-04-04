@@ -16,8 +16,8 @@ type GatewayService struct {
 }
 
 // NewGatewayService new a greeter service.
-func NewGatewayService(uc *biz.GatewayUsecase) *GatewayService {
-	return &GatewayService{uc: uc}
+func NewGatewayService(uc *biz.GatewayUsecase, KafkaBroker broker.Broker) *GatewayService {
+	return &GatewayService{uc: uc, KafkaBroker: KafkaBroker}
 }
 
 // GroupPutin 入群申请
@@ -68,4 +68,9 @@ func (s *GatewayService) FriendPutInList(ctx context.Context, req *pb.FriendPutI
 // FriendList 好友列表
 func (s *GatewayService) FriendList(ctx context.Context, req *pb.FriendListReq) (*pb.FriendListResp, error) {
 	return s.uc.FriendList(ctx, req)
+}
+
+// GetReadChatRecords 获取已读消息记录
+func (s *GatewayService) GetReadChatRecords(ctx context.Context, req *pb.GetReadChatRecordsReq) (*pb.GetReadChatRecordsResp, error) {
+	return s.uc.GetReadChatRecords(ctx, req)
 }

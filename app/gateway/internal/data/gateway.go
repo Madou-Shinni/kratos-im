@@ -224,3 +224,19 @@ func (r *gatewayRepo) FriendList(ctx context.Context, userId string) ([]*model.F
 
 	return data, nil
 }
+
+// GetChatLog 获取聊天记录
+func (r *gatewayRepo) GetChatLog(ctx context.Context, req *imPb.GetChatLogReq) ([]*model.ChatLog, error) {
+	resp, err := r.data.imClient.GetChatLog(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	var data []*model.ChatLog
+
+	err = copier.Copy(&data, &resp.List)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}

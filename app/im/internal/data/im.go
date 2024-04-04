@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"kratos-im/app/im/internal/biz"
 	"kratos-im/model"
@@ -75,7 +76,7 @@ func (r *imRepo) ListBySendTime(ctx context.Context, conversationId string, star
 	return data, nil
 }
 
-func (r *imRepo) FindChatLogOne(ctx context.Context, id string) (*model.ChatLog, error) {
+func (r *imRepo) FindChatLogOne(ctx context.Context, id primitive.ObjectID) (*model.ChatLog, error) {
 	var data model.ChatLog
 
 	err := r.data.mongoDatabase.Collection(model.ChatLog{}.Collection()).

@@ -63,6 +63,30 @@ func Chat(s *service.GatewayService) rws.HandleFunc {
 	}
 }
 
+// MakeRead 消息已读
+func MakeRead(s *service.GatewayService) rws.HandleFunc {
+	return func(svr *rws.Server, conn *rws.Conn, msg rws.Message) {
+		var data rws.MarkRead
+		if err := mapstructure.Decode(msg.Data, &data); err != nil {
+			svr.SendByConns(rws.NewErrMessage(err), conn)
+			return
+		}
+
+		// 基于kafka的异步消息处理
+		err := s.KafkaBroker.Publish(context.Background(), constants.TopicMsgReadTransfer, rws.MsgMarkReadTransfer{
+			ConversationId: data.ConversationId,
+			ChatType:       data.ChatType,
+			SendId:         conn.Uid,
+			RecvId:         data.RecvId,
+			MsgIds:         data.MsgIds,
+		})
+		if err != nil {
+			svr.SendByConns(rws.NewErrMessage(err), conn)
+			return
+		}
+	}
+}
+
 // Push 消息推送
 func Push(s *service.GatewayService) rws.HandleFunc {
 	return func(svr *rws.Server, conn *rws.Conn, msg rws.Message) {
@@ -92,10 +116,12 @@ func pushSingle(svr *rws.Server, data rws.Push, recvId string) error {
 	return svr.SendByConns(rws.NewMessage("push", data.SendId, data.RecvId, rws.Chat{
 		ConversationId: data.ConversationId,
 		ChatType:       data.ChatType,
-		SendTime:       0,
+		SendTime:       data.SendTime,
 		Msg: rws.Msg{
-			MType:   data.MType,
-			Content: data.Content,
+			MsgId:       data.MsgId,
+			MType:       data.MType,
+			Content:     data.Content,
+			ReadRecords: data.ReadRecords,
 		},
 	}), conn)
 }

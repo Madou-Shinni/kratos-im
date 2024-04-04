@@ -30,6 +30,11 @@ func register(svr *kafka.Server, svc *service.ConsumerService, ctx context.Conte
 		goto Err
 	}
 
+	err = kafka.RegisterSubscriber(svr, ctx, constants.TopicMsgReadTransfer, "kafka", false, svc.HandleMsgReadTransfer)
+	if err != nil {
+		goto Err
+	}
+
 Err:
 	log.Errorf("register subscriber error: %v", err)
 	return

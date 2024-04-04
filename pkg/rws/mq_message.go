@@ -2,6 +2,7 @@ package rws
 
 import "kratos-im/constants"
 
+// MsgChatTransfer 消息转发
 type MsgChatTransfer struct {
 	// 会话ID
 	ConversationId string `json:"conversationId"`
@@ -21,4 +22,18 @@ type MsgChatTransfer struct {
 
 	// 发送时间
 	SendTime int64 `json:"sendTime"`
+}
+
+// MsgMarkReadTransfer 已读处理
+type MsgMarkReadTransfer struct {
+	// 聊天类型
+	constants.ChatType `json:"chatType"`
+	// 会话ID
+	ConversationId string `json:"conversationId"`
+	// 发送者ID
+	SendId string `json:"sendId"`
+	// 接受者ID
+	RecvId string `json:"recvId"`
+	// 消息IDs
+	MsgIds []string `json:"msgIds"`
 }

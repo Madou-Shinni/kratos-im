@@ -4,10 +4,12 @@ import (
 	"context"
 	"github.com/jinzhu/copier"
 	v1 "kratos-im/api/gateway"
+	imPb "kratos-im/api/im"
 	"kratos-im/common"
 	"kratos-im/constants"
 	"kratos-im/model"
 	"kratos-im/pkg/rws"
+	"kratos-im/pkg/tools"
 	"strconv"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -63,6 +65,7 @@ type GatewayRepo interface {
 	GroupPutinList(ctx context.Context, groupId uint64) ([]*model.GroupRequests, error)
 	GroupList(ctx context.Context, userId string) ([]*model.Groups, error)
 	GroupUsers(ctx context.Context, groupId uint64) ([]*model.GroupMembers, error)
+	GetChatLog(ctx context.Context, req *imPb.GetChatLogReq) ([]*model.ChatLog, error)
 }
 
 // GatewayUsecase is a Gateway usecase.
@@ -338,4 +341,58 @@ func (uc *GatewayUsecase) GroupUserList(ctx context.Context, req *v1.GroupUsersR
 	}
 
 	return &v1.GroupUsersResp{List: list}, nil
+}
+
+func (uc *GatewayUsecase) GetReadChatRecords(ctx context.Context, req *v1.GetReadChatRecordsReq) (*v1.GetReadChatRecordsResp, error) {
+	// 查询消息记录
+	chatLogs, err := uc.repo.GetChatLog(ctx, &imPb.GetChatLogReq{
+		MsgId: req.MsgId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(chatLogs) == 0 {
+		return &v1.GetReadChatRecordsResp{}, nil
+	}
+
+	var (
+		chatLog = chatLogs[0]
+		reads   = []string{chatLog.SendId}
+		unReads []string
+	)
+
+	// 设置未读已读
+	switch chatLog.ChatType {
+	case constants.ChatTypeSingle: // 单聊
+		if len(chatLog.ReadRecords) == 0 || chatLog.ReadRecords[0] == 0 {
+			unReads = []string{chatLog.RecvId}
+		} else {
+			reads = append(reads, chatLog.RecvId)
+		}
+	case constants.ChatTypeGroup: // 群聊
+		gid, _ := strconv.ParseUint(chatLog.RecvId, 10, 64)
+		members, err := uc.repo.GroupUsers(ctx, gid)
+		if err != nil {
+			return nil, err
+		}
+
+		bitmaps := tools.Load(chatLog.ReadRecords)
+		for _, v := range members {
+			if v.UserId == chatLog.SendId {
+				continue
+			}
+
+			if bitmaps.IsSet(v.UserId) {
+				reads = append(reads, v.UserId)
+			} else {
+				unReads = append(unReads, v.UserId)
+			}
+		}
+	}
+
+	return &v1.GetReadChatRecordsResp{
+		Reads:   reads,
+		UnReads: unReads,
+	}, err
 }

@@ -22,3 +22,8 @@ func NewConsumerService(uc *biz.ConsumerUsecase) *ConsumerService {
 func (s *ConsumerService) HandleMsgTransfer(ctx context.Context, topic string, headers broker.Headers, msg *rws.MsgChatTransfer) error {
 	return s.uc.HandleMsgTransfer(ctx, topic, headers, msg)
 }
+
+// HandleMsgReadTransfer implements the ConsumerService.
+func (s *ConsumerService) HandleMsgReadTransfer(ctx context.Context, topic string, headers broker.Headers, msg *rws.MsgMarkReadTransfer) error {
+	return s.uc.HandleMsgReadTransfer(ctx, topic, headers, msg)
+}

@@ -12,8 +12,18 @@ const (
 type ChatType int
 
 const (
-	// ChatTypeGroup 群聊
-	ChatTypeGroup ChatType = iota + 1
 	// ChatTypeSingle 单聊
-	ChatTypeSingle
+	ChatTypeSingle = iota + 1
+	// ChatTypeGroup 群聊
+	ChatTypeGroup
+)
+
+// ContentType 内容类型
+type ContentType int
+
+const (
+	// ContentTypeChat 聊天内容类型
+	ContentTypeChat ContentType = iota
+	// ContentTypeMakeRead 已读
+	ContentTypeMakeRead
 )
