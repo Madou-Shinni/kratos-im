@@ -30,6 +30,26 @@ func (s *GatewayService) GroupCreate(ctx context.Context, req *pb.GroupCreateReq
 	return s.uc.GroupCreate(ctx, req)
 }
 
+// GroupPutInHandle 入群申请处理
+func (s *GatewayService) GroupPutInHandle(ctx context.Context, req *pb.GroupPutInHandleReq) (*pb.GroupPutInHandleResp, error) {
+	return s.uc.GroupPutInHandle(ctx, req)
+}
+
+// GroupPutinList 入群申请列表
+func (s *GatewayService) GroupPutinList(ctx context.Context, req *pb.GroupPutinListReq) (*pb.GroupPutinListResp, error) {
+	return s.uc.GroupPutinList(ctx, req)
+}
+
+// GroupList 群列表
+func (s *GatewayService) GroupList(ctx context.Context, req *pb.GroupListReq) (*pb.GroupListResp, error) {
+	return s.uc.GroupList(ctx, req)
+}
+
+// GroupUsers 群成员列表
+func (s *GatewayService) GroupUsers(ctx context.Context, req *pb.GroupUsersReq) (*pb.GroupUsersResp, error) {
+	return s.uc.GroupUserList(ctx, req)
+}
+
 // FriendPutIn 好友申请
 func (s *GatewayService) FriendPutIn(ctx context.Context, req *pb.FriendPutInReq) (*pb.FriendPutInResp, error) {
 	return s.uc.FriendPutIn(ctx, req)

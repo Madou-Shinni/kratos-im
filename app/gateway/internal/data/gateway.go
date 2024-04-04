@@ -63,11 +63,79 @@ func (r *gatewayRepo) GroupPutin(ctx context.Context, data *model.GroupRequests)
 		ReqId:      data.ReqId,
 		ReqMsg:     data.ReqMsg,
 		InviterUid: data.InviterUserId,
+		JoinSource: int32(data.JoinSource),
 	})
 	if err != nil {
 		return nil, err
 	}
 	return &biz.GroupPutinResp{GroupId: resp.GroupId}, nil
+}
+
+// GroupPutInHandle 入群申请处理
+func (r *gatewayRepo) GroupPutInHandle(ctx context.Context, data *biz.GroupPutInHandleReq) error {
+	_, err := r.data.socialClient.GroupPutInHandle(ctx, &socialPb.GroupPutInHandleReq{
+		GroupReqId:   int32(data.GroupReqId),
+		HandleUid:    data.HandleUid,
+		HandleResult: int32(data.HandleResult),
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// GroupPutinList 入群申请列表
+func (r *gatewayRepo) GroupPutinList(ctx context.Context, groupId uint64) ([]*model.GroupRequests, error) {
+	resp, err := r.data.socialClient.GroupPutinList(ctx, &socialPb.GroupPutinListReq{
+		GroupId: groupId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	var data []*model.GroupRequests
+
+	err = copier.Copy(&data, &resp.List)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+// GroupList 群列表
+func (r *gatewayRepo) GroupList(ctx context.Context, userId string) ([]*model.Groups, error) {
+	resp, err := r.data.socialClient.GroupList(ctx, &socialPb.GroupListReq{
+		UserId: userId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	var data []*model.Groups
+
+	err = copier.Copy(&data, &resp.List)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+// GroupUsers 群成员列表
+func (r *gatewayRepo) GroupUsers(ctx context.Context, groupId uint64) ([]*model.GroupMembers, error) {
+	resp, err := r.data.socialClient.GroupUsers(ctx, &socialPb.GroupUsersReq{
+		GroupId: groupId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	var data []*model.GroupMembers
+
+	err = copier.Copy(&data, &resp.List)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }
 
 // CreateGroupConversation 创建群会话

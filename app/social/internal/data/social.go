@@ -102,7 +102,7 @@ func (r *socialRepo) FirstFriendReqByRid(ctx context.Context, rid uint64) (*mode
 // ListFriendReqByUid 通过uid查询好友申请记录
 func (r *socialRepo) ListFriendReqByUid(ctx context.Context, uid string) ([]*model.FriendRequests, error) {
 	var data []*model.FriendRequests
-	err := r.data.db.Find(&data, "user_id = ? or req_uid = ?", uid, uid).Error
+	err := r.data.db.Find(&data, "user_id = ?", uid).Error
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +157,7 @@ func (r *socialRepo) FirstGroupMemberByGidUid(ctx context.Context, gid uint64, u
 // FirstGroupReqByGidUid 通过gid,uid查询入群申请
 func (r *socialRepo) FirstGroupReqByGidUid(ctx context.Context, gid uint64, uid string) (*model.GroupRequests, error) {
 	var data model.GroupRequests
-	err := r.data.db.First(&data, "group_id = ? AND uid = ?", gid, uid).Error
+	err := r.data.db.First(&data, "group_id = ? AND req_id = ?", gid, uid).Error
 	if err != nil {
 		return nil, err
 	}

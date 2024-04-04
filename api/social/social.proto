@@ -43,7 +43,7 @@ message FriendRequests {
 }
 
 message Groups {
-	string id = 1;
+	uint64 id = 1;
 	string name = 2;
 	string icon = 3;
 	int32  status = 4;
@@ -67,7 +67,7 @@ message GroupMembers {
 
 message GroupRequests {
 	int32  id = 1;
-	string groupId = 2;
+	uint64 groupId = 2;
 	string reqId = 3;
 	string reqMsg = 4;
 	int64  reqTime = 5;
@@ -142,12 +142,8 @@ message GroupPutinListResp {
 
 message GroupPutInHandleReq {
 	int32  groupReqId = 1;
-	uint64 groupId = 2;
-	string handleUid = 3;
-	int32  handleResult = 4; // 处理结果
-
-	string username = 6;
-	string userAvatarUrl = 7;
+	string handleUid = 2;
+	int32  handleResult = 3; // 处理结果
 }
 message GroupPutInHandleResp {
 	uint64 groupId = 1;

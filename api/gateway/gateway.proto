@@ -43,7 +43,7 @@ service Gateway {
     };
   }
 
-  // 申请入群
+  // 入群申请
   rpc GroupPutin(GroupPutinReq) returns (GroupPutinResp) {
     option (google.api.http) = {
       put: "/group/putin"
@@ -51,7 +51,56 @@ service Gateway {
     };
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      summary: "申请入群"
+      summary: "入群申请"
+      tags: ["social"]
+    };
+  }
+
+  // 入群申请列表
+  rpc GroupPutinList(GroupPutinListReq) returns (GroupPutinListResp) {
+    option (google.api.http) = {
+      get: "/group/putin/list"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "入群申请列表"
+      tags: ["social"]
+    };
+  }
+
+  // 入群申请处理
+  rpc GroupPutInHandle(GroupPutInHandleReq) returns (GroupPutInHandleResp) {
+    option (google.api.http) = {
+      put: "/group/putin/handle"
+      body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "入群申请处理"
+      tags: ["social"]
+    };
+  }
+
+  // 群列表
+  rpc GroupList(GroupListReq) returns (GroupListResp) {
+    option (google.api.http) = {
+      get: "/group/list"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "群列表"
+      tags: ["social"]
+    };
+  }
+
+  // 群成员列表
+  rpc GroupUsers(GroupUsersReq) returns (GroupUsersResp) {
+    option (google.api.http) = {
+      get: "/group/users"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "群成员列表"
       tags: ["social"]
     };
   }
@@ -157,36 +206,13 @@ service Gateway {
 //  }
 }
 
-message GroupCreateReq {
-  string name = 2;
-  string icon = 3;
-  int32  status = 4;
-  string creator_uid = 5;
-}
-
-message GroupCreateResp {
-  uint64 id = 1;
-}
-
-message GroupPutinReq {
-  uint64 groupId = 2;
-  string reqId = 3;
-  string reqMsg = 4;
-  int64  reqTime = 5;
-  int32  joinSource = 6;
-  string inviterUid = 7;
-}
-message GroupPutinResp {
-  uint64 groupId = 1;
-}
-
 // model
 message Friends {
   int32  id = 1;
-  string userId = 2;
-  string remark = 3;
-  int32  addSource = 4; // 添加来源
-  string friendUid = 5;
+  string friendUid = 2;
+  string nickname = 3;
+  string avatar = 4;
+  string remark = 5;
 }
 
 message FriendRequests {
@@ -196,10 +222,11 @@ message FriendRequests {
   string reqMsg = 4;
   int64  reqTime = 5;
   int32  handleResult = 6; // 处理结果
+  string handleMsg = 7;
 }
 
 message Groups {
-  string id = 1;
+  uint64 id = 1;
   string name = 2;
   string icon = 3;
   int32  status = 4;
@@ -219,11 +246,13 @@ message GroupMembers {
   int32  joinSource = 8;
   string inviterUid = 9;
   string operatorUid = 10;
+  string nickname = 11;
+  string userAvatarUrl = 12;
 }
 
 message GroupRequests {
   int32  id = 1;
-  string groupId = 2;
+  uint64 groupId = 2;
   string reqId = 3;
   string reqMsg = 4;
   int64  reqTime = 5;
@@ -231,22 +260,20 @@ message GroupRequests {
   string inviterUid = 7;
   string handleUid = 8;
   int32  handleResult = 9; // 处理结果
+  int64  handleTime = 10;
 }
 
 // req resp
 
 message FriendPutInReq {
-  string userId = 2;
-  string reqUid = 3;
-  string reqMsg = 4;
-  int64  reqTime = 5;
+  string reqUid = 1;
+  string reqMsg = 2;
 }
 message FriendPutInResp {}
 
 message FriendPutInHandleReq {
   int32  friendReqId = 1;
-  string userId = 2;
-  int32 handleResult = 3; // 处理结果
+  int32 handleResult = 2; // 处理结果
 }
 message FriendPutInHandleResp {}
 
@@ -266,6 +293,24 @@ message FriendListResp{
 
 // 群
 
+message GroupCreateReq {
+  string name = 1;
+  string icon = 2;
+}
+
+message GroupCreateResp {
+  uint64 id = 1;
+}
+
+message GroupPutinReq {
+  uint64 groupId = 1;
+  string reqMsg = 2;
+  int32 joinSource = 3;
+}
+message GroupPutinResp {
+  uint64 groupId = 1;
+}
+
 message GroupPutinListReq {
   uint64 groupId = 1;
 }
@@ -276,18 +321,12 @@ message GroupPutinListResp {
 message GroupPutInHandleReq {
   int32  groupReqId = 1;
   uint64 groupId = 2;
-  string handleUid = 3;
-  int32  handleResult = 4; // 处理结果
-
-  string username = 6;
-  string userAvatarUrl = 7;
+  int32  handleResult = 3; // 处理结果
 }
 message GroupPutInHandleResp {
-  uint64 groupId = 1;
 }
 
 message GroupListReq{
-  string userId = 1;
 }
 message GroupListResp{
   repeated Groups list = 1;

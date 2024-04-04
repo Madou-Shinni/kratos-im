@@ -24,7 +24,11 @@ const OperationGatewayFriendPutIn = "/api.gateway.Gateway/FriendPutIn"
 const OperationGatewayFriendPutInHandle = "/api.gateway.Gateway/FriendPutInHandle"
 const OperationGatewayFriendPutInList = "/api.gateway.Gateway/FriendPutInList"
 const OperationGatewayGroupCreate = "/api.gateway.Gateway/GroupCreate"
+const OperationGatewayGroupList = "/api.gateway.Gateway/GroupList"
+const OperationGatewayGroupPutInHandle = "/api.gateway.Gateway/GroupPutInHandle"
 const OperationGatewayGroupPutin = "/api.gateway.Gateway/GroupPutin"
+const OperationGatewayGroupPutinList = "/api.gateway.Gateway/GroupPutinList"
+const OperationGatewayGroupUsers = "/api.gateway.Gateway/GroupUsers"
 
 type GatewayHTTPServer interface {
 	// FriendList 好友列表
@@ -37,14 +41,26 @@ type GatewayHTTPServer interface {
 	FriendPutInList(context.Context, *FriendPutInListReq) (*FriendPutInListResp, error)
 	// GroupCreate 创建群
 	GroupCreate(context.Context, *GroupCreateReq) (*GroupCreateResp, error)
-	// GroupPutin 申请入群
+	// GroupList 群列表
+	GroupList(context.Context, *GroupListReq) (*GroupListResp, error)
+	// GroupPutInHandle 入群申请处理
+	GroupPutInHandle(context.Context, *GroupPutInHandleReq) (*GroupPutInHandleResp, error)
+	// GroupPutin 入群申请
 	GroupPutin(context.Context, *GroupPutinReq) (*GroupPutinResp, error)
+	// GroupPutinList 入群申请列表
+	GroupPutinList(context.Context, *GroupPutinListReq) (*GroupPutinListResp, error)
+	// GroupUsers 群成员列表
+	GroupUsers(context.Context, *GroupUsersReq) (*GroupUsersResp, error)
 }
 
 func RegisterGatewayHTTPServer(s *http.Server, srv GatewayHTTPServer) {
 	r := s.Route("/")
 	r.POST("/group/create", _Gateway_GroupCreate0_HTTP_Handler(srv))
 	r.PUT("/group/putin", _Gateway_GroupPutin0_HTTP_Handler(srv))
+	r.GET("/group/putin/list", _Gateway_GroupPutinList0_HTTP_Handler(srv))
+	r.PUT("/group/putin/handle", _Gateway_GroupPutInHandle0_HTTP_Handler(srv))
+	r.GET("/group/list", _Gateway_GroupList0_HTTP_Handler(srv))
+	r.GET("/group/users", _Gateway_GroupUsers0_HTTP_Handler(srv))
 	r.PUT("/friend/putin", _Gateway_FriendPutIn0_HTTP_Handler(srv))
 	r.PUT("/friend/putin/handle", _Gateway_FriendPutInHandle0_HTTP_Handler(srv))
 	r.GET("/friend/putin/list", _Gateway_FriendPutInList0_HTTP_Handler(srv))
@@ -91,6 +107,85 @@ func _Gateway_GroupPutin0_HTTP_Handler(srv GatewayHTTPServer) func(ctx http.Cont
 			return err
 		}
 		reply := out.(*GroupPutinResp)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Gateway_GroupPutinList0_HTTP_Handler(srv GatewayHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GroupPutinListReq
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationGatewayGroupPutinList)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GroupPutinList(ctx, req.(*GroupPutinListReq))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GroupPutinListResp)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Gateway_GroupPutInHandle0_HTTP_Handler(srv GatewayHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GroupPutInHandleReq
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationGatewayGroupPutInHandle)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GroupPutInHandle(ctx, req.(*GroupPutInHandleReq))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GroupPutInHandleResp)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Gateway_GroupList0_HTTP_Handler(srv GatewayHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GroupListReq
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationGatewayGroupList)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GroupList(ctx, req.(*GroupListReq))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GroupListResp)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Gateway_GroupUsers0_HTTP_Handler(srv GatewayHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GroupUsersReq
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationGatewayGroupUsers)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GroupUsers(ctx, req.(*GroupUsersReq))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GroupUsersResp)
 		return ctx.Result(200, reply)
 	}
 }
@@ -183,7 +278,11 @@ type GatewayHTTPClient interface {
 	FriendPutInHandle(ctx context.Context, req *FriendPutInHandleReq, opts ...http.CallOption) (rsp *FriendPutInHandleResp, err error)
 	FriendPutInList(ctx context.Context, req *FriendPutInListReq, opts ...http.CallOption) (rsp *FriendPutInListResp, err error)
 	GroupCreate(ctx context.Context, req *GroupCreateReq, opts ...http.CallOption) (rsp *GroupCreateResp, err error)
+	GroupList(ctx context.Context, req *GroupListReq, opts ...http.CallOption) (rsp *GroupListResp, err error)
+	GroupPutInHandle(ctx context.Context, req *GroupPutInHandleReq, opts ...http.CallOption) (rsp *GroupPutInHandleResp, err error)
 	GroupPutin(ctx context.Context, req *GroupPutinReq, opts ...http.CallOption) (rsp *GroupPutinResp, err error)
+	GroupPutinList(ctx context.Context, req *GroupPutinListReq, opts ...http.CallOption) (rsp *GroupPutinListResp, err error)
+	GroupUsers(ctx context.Context, req *GroupUsersReq, opts ...http.CallOption) (rsp *GroupUsersResp, err error)
 }
 
 type GatewayHTTPClientImpl struct {
@@ -259,6 +358,32 @@ func (c *GatewayHTTPClientImpl) GroupCreate(ctx context.Context, in *GroupCreate
 	return &out, nil
 }
 
+func (c *GatewayHTTPClientImpl) GroupList(ctx context.Context, in *GroupListReq, opts ...http.CallOption) (*GroupListResp, error) {
+	var out GroupListResp
+	pattern := "/group/list"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationGatewayGroupList))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *GatewayHTTPClientImpl) GroupPutInHandle(ctx context.Context, in *GroupPutInHandleReq, opts ...http.CallOption) (*GroupPutInHandleResp, error) {
+	var out GroupPutInHandleResp
+	pattern := "/group/putin/handle"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationGatewayGroupPutInHandle))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 func (c *GatewayHTTPClientImpl) GroupPutin(ctx context.Context, in *GroupPutinReq, opts ...http.CallOption) (*GroupPutinResp, error) {
 	var out GroupPutinResp
 	pattern := "/group/putin"
@@ -266,6 +391,32 @@ func (c *GatewayHTTPClientImpl) GroupPutin(ctx context.Context, in *GroupPutinRe
 	opts = append(opts, http.Operation(OperationGatewayGroupPutin))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *GatewayHTTPClientImpl) GroupPutinList(ctx context.Context, in *GroupPutinListReq, opts ...http.CallOption) (*GroupPutinListResp, error) {
+	var out GroupPutinListResp
+	pattern := "/group/putin/list"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationGatewayGroupPutinList))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *GatewayHTTPClientImpl) GroupUsers(ctx context.Context, in *GroupUsersReq, opts ...http.CallOption) (*GroupUsersResp, error) {
+	var out GroupUsersResp
+	pattern := "/group/users"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationGatewayGroupUsers))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

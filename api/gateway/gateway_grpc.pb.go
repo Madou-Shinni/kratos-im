@@ -21,6 +21,10 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	Gateway_GroupCreate_FullMethodName       = "/api.gateway.Gateway/GroupCreate"
 	Gateway_GroupPutin_FullMethodName        = "/api.gateway.Gateway/GroupPutin"
+	Gateway_GroupPutinList_FullMethodName    = "/api.gateway.Gateway/GroupPutinList"
+	Gateway_GroupPutInHandle_FullMethodName  = "/api.gateway.Gateway/GroupPutInHandle"
+	Gateway_GroupList_FullMethodName         = "/api.gateway.Gateway/GroupList"
+	Gateway_GroupUsers_FullMethodName        = "/api.gateway.Gateway/GroupUsers"
 	Gateway_FriendPutIn_FullMethodName       = "/api.gateway.Gateway/FriendPutIn"
 	Gateway_FriendPutInHandle_FullMethodName = "/api.gateway.Gateway/FriendPutInHandle"
 	Gateway_FriendPutInList_FullMethodName   = "/api.gateway.Gateway/FriendPutInList"
@@ -33,8 +37,16 @@ const (
 type GatewayClient interface {
 	// 创建群
 	GroupCreate(ctx context.Context, in *GroupCreateReq, opts ...grpc.CallOption) (*GroupCreateResp, error)
-	// 申请入群
+	// 入群申请
 	GroupPutin(ctx context.Context, in *GroupPutinReq, opts ...grpc.CallOption) (*GroupPutinResp, error)
+	// 入群申请列表
+	GroupPutinList(ctx context.Context, in *GroupPutinListReq, opts ...grpc.CallOption) (*GroupPutinListResp, error)
+	// 入群申请处理
+	GroupPutInHandle(ctx context.Context, in *GroupPutInHandleReq, opts ...grpc.CallOption) (*GroupPutInHandleResp, error)
+	// 群列表
+	GroupList(ctx context.Context, in *GroupListReq, opts ...grpc.CallOption) (*GroupListResp, error)
+	// 群成员列表
+	GroupUsers(ctx context.Context, in *GroupUsersReq, opts ...grpc.CallOption) (*GroupUsersResp, error)
 	// 好友申请
 	FriendPutIn(ctx context.Context, in *FriendPutInReq, opts ...grpc.CallOption) (*FriendPutInResp, error)
 	// 好友申请处理
@@ -65,6 +77,42 @@ func (c *gatewayClient) GroupCreate(ctx context.Context, in *GroupCreateReq, opt
 func (c *gatewayClient) GroupPutin(ctx context.Context, in *GroupPutinReq, opts ...grpc.CallOption) (*GroupPutinResp, error) {
 	out := new(GroupPutinResp)
 	err := c.cc.Invoke(ctx, Gateway_GroupPutin_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) GroupPutinList(ctx context.Context, in *GroupPutinListReq, opts ...grpc.CallOption) (*GroupPutinListResp, error) {
+	out := new(GroupPutinListResp)
+	err := c.cc.Invoke(ctx, Gateway_GroupPutinList_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) GroupPutInHandle(ctx context.Context, in *GroupPutInHandleReq, opts ...grpc.CallOption) (*GroupPutInHandleResp, error) {
+	out := new(GroupPutInHandleResp)
+	err := c.cc.Invoke(ctx, Gateway_GroupPutInHandle_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) GroupList(ctx context.Context, in *GroupListReq, opts ...grpc.CallOption) (*GroupListResp, error) {
+	out := new(GroupListResp)
+	err := c.cc.Invoke(ctx, Gateway_GroupList_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) GroupUsers(ctx context.Context, in *GroupUsersReq, opts ...grpc.CallOption) (*GroupUsersResp, error) {
+	out := new(GroupUsersResp)
+	err := c.cc.Invoke(ctx, Gateway_GroupUsers_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -113,8 +161,16 @@ func (c *gatewayClient) FriendList(ctx context.Context, in *FriendListReq, opts 
 type GatewayServer interface {
 	// 创建群
 	GroupCreate(context.Context, *GroupCreateReq) (*GroupCreateResp, error)
-	// 申请入群
+	// 入群申请
 	GroupPutin(context.Context, *GroupPutinReq) (*GroupPutinResp, error)
+	// 入群申请列表
+	GroupPutinList(context.Context, *GroupPutinListReq) (*GroupPutinListResp, error)
+	// 入群申请处理
+	GroupPutInHandle(context.Context, *GroupPutInHandleReq) (*GroupPutInHandleResp, error)
+	// 群列表
+	GroupList(context.Context, *GroupListReq) (*GroupListResp, error)
+	// 群成员列表
+	GroupUsers(context.Context, *GroupUsersReq) (*GroupUsersResp, error)
 	// 好友申请
 	FriendPutIn(context.Context, *FriendPutInReq) (*FriendPutInResp, error)
 	// 好友申请处理
@@ -135,6 +191,18 @@ func (UnimplementedGatewayServer) GroupCreate(context.Context, *GroupCreateReq) 
 }
 func (UnimplementedGatewayServer) GroupPutin(context.Context, *GroupPutinReq) (*GroupPutinResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GroupPutin not implemented")
+}
+func (UnimplementedGatewayServer) GroupPutinList(context.Context, *GroupPutinListReq) (*GroupPutinListResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GroupPutinList not implemented")
+}
+func (UnimplementedGatewayServer) GroupPutInHandle(context.Context, *GroupPutInHandleReq) (*GroupPutInHandleResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GroupPutInHandle not implemented")
+}
+func (UnimplementedGatewayServer) GroupList(context.Context, *GroupListReq) (*GroupListResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GroupList not implemented")
+}
+func (UnimplementedGatewayServer) GroupUsers(context.Context, *GroupUsersReq) (*GroupUsersResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GroupUsers not implemented")
 }
 func (UnimplementedGatewayServer) FriendPutIn(context.Context, *FriendPutInReq) (*FriendPutInResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FriendPutIn not implemented")
@@ -193,6 +261,78 @@ func _Gateway_GroupPutin_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GatewayServer).GroupPutin(ctx, req.(*GroupPutinReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_GroupPutinList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GroupPutinListReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).GroupPutinList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_GroupPutinList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).GroupPutinList(ctx, req.(*GroupPutinListReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_GroupPutInHandle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GroupPutInHandleReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).GroupPutInHandle(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_GroupPutInHandle_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).GroupPutInHandle(ctx, req.(*GroupPutInHandleReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_GroupList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GroupListReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).GroupList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_GroupList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).GroupList(ctx, req.(*GroupListReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_GroupUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GroupUsersReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).GroupUsers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_GroupUsers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).GroupUsers(ctx, req.(*GroupUsersReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -283,6 +423,22 @@ var Gateway_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GroupPutin",
 			Handler:    _Gateway_GroupPutin_Handler,
+		},
+		{
+			MethodName: "GroupPutinList",
+			Handler:    _Gateway_GroupPutinList_Handler,
+		},
+		{
+			MethodName: "GroupPutInHandle",
+			Handler:    _Gateway_GroupPutInHandle_Handler,
+		},
+		{
+			MethodName: "GroupList",
+			Handler:    _Gateway_GroupList_Handler,
+		},
+		{
+			MethodName: "GroupUsers",
+			Handler:    _Gateway_GroupUsers_Handler,
 		},
 		{
 			MethodName: "FriendPutIn",

@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+	"github.com/jinzhu/copier"
 	v1 "kratos-im/api/gateway"
 	"kratos-im/common"
 	"kratos-im/constants"
@@ -41,6 +42,12 @@ type FriendPutInHandleReq struct {
 	HandleResult int32
 }
 
+type GroupPutInHandleReq struct {
+	GroupReqId   uint64
+	HandleUid    string
+	HandleResult constants.HandleResult
+}
+
 // GatewayRepo is a Greater repo.
 type GatewayRepo interface {
 	Save(ctx context.Context, chatLog model.ChatLog) error
@@ -52,6 +59,10 @@ type GatewayRepo interface {
 	FriendPutInHandle(ctx context.Context, data *FriendPutInHandleReq) error
 	FriendPutInList(ctx context.Context, userId string) ([]*model.FriendRequests, error)
 	FriendList(ctx context.Context, userId string) ([]*model.Friends, error)
+	GroupPutInHandle(ctx context.Context, data *GroupPutInHandleReq) error
+	GroupPutinList(ctx context.Context, groupId uint64) ([]*model.GroupRequests, error)
+	GroupList(ctx context.Context, userId string) ([]*model.Groups, error)
+	GroupUsers(ctx context.Context, groupId uint64) ([]*model.GroupMembers, error)
 }
 
 // GatewayUsecase is a Gateway usecase.
@@ -79,6 +90,7 @@ func (uc *GatewayUsecase) CreateChatLog(ctx context.Context, data *rws.Chat) err
 	return uc.repo.Save(ctx, chatLog)
 }
 
+// GroupPutin 入群申请
 func (uc *GatewayUsecase) GroupPutin(ctx context.Context, req *v1.GroupPutinReq) (*v1.GroupPutinResp, error) {
 	// 获取uid
 	uid, err := common.GetUidFromCtx(ctx)
@@ -88,10 +100,10 @@ func (uc *GatewayUsecase) GroupPutin(ctx context.Context, req *v1.GroupPutinReq)
 
 	// 入群申请
 	data, err := uc.repo.GroupPutin(ctx, &model.GroupRequests{
-		GroupId:       req.GroupId,
-		ReqId:         uid,
-		ReqMsg:        req.ReqMsg,
-		InviterUserId: req.InviterUid,
+		GroupId:    req.GroupId,
+		ReqId:      uid,
+		ReqMsg:     req.ReqMsg,
+		JoinSource: int(req.JoinSource),
 	})
 	if err != nil {
 		return nil, err
@@ -126,7 +138,6 @@ func (uc *GatewayUsecase) GroupCreate(ctx context.Context, req *v1.GroupCreateRe
 	data, err := uc.repo.GroupCreate(ctx, &model.Groups{
 		Name:       req.Name,
 		Icon:       req.Icon,
-		Status:     int(req.Status),
 		CreatorUid: uid,
 	})
 	if err != nil {
@@ -234,11 +245,97 @@ func (uc *GatewayUsecase) FriendList(ctx context.Context, req *v1.FriendListReq)
 	for _, v := range data {
 		list = append(list, &v1.Friends{
 			Id:        int32(v.ID),
-			UserId:    v.UserId,
 			FriendUid: v.FriendUid,
 			Remark:    v.Remark,
 		})
 	}
 
 	return &v1.FriendListResp{List: list}, nil
+}
+
+// GroupPutInHandle 入群申请处理
+func (uc *GatewayUsecase) GroupPutInHandle(ctx context.Context, req *v1.GroupPutInHandleReq) (*v1.GroupPutInHandleResp, error) {
+	// 获取uid
+	uid, err := common.GetUidFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = uc.repo.GroupPutInHandle(ctx, &GroupPutInHandleReq{
+		GroupReqId:   uint64(req.GroupReqId),
+		HandleUid:    uid,
+		HandleResult: constants.HandleResult(req.HandleResult),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if req.HandleResult == int32(constants.HandleResultAgree) {
+		// 建立会话
+		err = uc.repo.CreateConversation(ctx, &CreateConversationReq{
+			UserId:   uid,
+			RecvId:   strconv.FormatUint(req.GroupId, 10),
+			ChatType: constants.ChatTypeGroup,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &v1.GroupPutInHandleResp{}, nil
+}
+
+// GroupPutinList 入群申请列表
+func (uc *GatewayUsecase) GroupPutinList(ctx context.Context, req *v1.GroupPutinListReq) (*v1.GroupPutinListResp, error) {
+	data, err := uc.repo.GroupPutinList(ctx, req.GroupId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var list = make([]*v1.GroupRequests, 0, len(data))
+	err = copier.Copy(&list, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.GroupPutinListResp{List: list}, nil
+}
+
+// GroupList 群列表
+func (uc *GatewayUsecase) GroupList(ctx context.Context, req *v1.GroupListReq) (*v1.GroupListResp, error) {
+	// 获取uid
+	uid, err := common.GetUidFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := uc.repo.GroupList(ctx, uid)
+	if err != nil {
+		return nil, err
+	}
+
+	var list = make([]*v1.Groups, 0, len(data))
+	err = copier.Copy(&list, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.GroupListResp{List: list}, nil
+}
+
+// GroupUserList 群成员列表
+func (uc *GatewayUsecase) GroupUserList(ctx context.Context, req *v1.GroupUsersReq) (*v1.GroupUsersResp, error) {
+	data, err := uc.repo.GroupUsers(ctx, req.GroupId)
+	if err != nil {
+		return nil, err
+	}
+
+	var list = make([]*v1.GroupMembers, 0, len(data))
+	err = copier.Copy(&list, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.GroupUsersResp{List: list}, nil
 }

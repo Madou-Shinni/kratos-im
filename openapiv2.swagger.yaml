@@ -108,9 +108,24 @@ paths:
             $ref: '#/definitions/apigatewayGroupCreateReq'
       tags:
         - social
+  /group/list:
+    get:
+      summary: 群列表
+      operationId: Gateway_GroupList
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apigatewayGroupListResp'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - social
   /group/putin:
     put:
-      summary: 申请入群
+      summary: 入群申请
       operationId: Gateway_GroupPutin
       responses:
         "200":
@@ -127,6 +142,69 @@ paths:
           required: true
           schema:
             $ref: '#/definitions/apigatewayGroupPutinReq'
+      tags:
+        - social
+  /group/putin/handle:
+    put:
+      summary: 入群申请处理
+      operationId: Gateway_GroupPutInHandle
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apigatewayGroupPutInHandleResp'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/apigatewayGroupPutInHandleReq'
+      tags:
+        - social
+  /group/putin/list:
+    get:
+      summary: 入群申请列表
+      operationId: Gateway_GroupPutinList
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apigatewayGroupPutinListResp'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: groupId
+          in: query
+          required: false
+          type: string
+          format: uint64
+      tags:
+        - social
+  /group/users:
+    get:
+      summary: 群成员列表
+      operationId: Gateway_GroupUsers
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apigatewayGroupUsersResp'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: groupId
+          in: query
+          required: false
+          type: string
+          format: uint64
       tags:
         - social
 definitions:
@@ -157,8 +235,6 @@ definitions:
       friendReqId:
         type: integer
         format: int32
-      userId:
-        type: string
       handleResult:
         type: integer
         format: int32
@@ -176,15 +252,10 @@ definitions:
   apigatewayFriendPutInReq:
     type: object
     properties:
-      userId:
-        type: string
       reqUid:
         type: string
       reqMsg:
         type: string
-      reqTime:
-        type: string
-        format: int64
   apigatewayFriendPutInResp:
     type: object
   apigatewayFriendRequests:
@@ -206,21 +277,21 @@ definitions:
         type: integer
         format: int32
         title: 处理结果
+      handleMsg:
+        type: string
   apigatewayFriends:
     type: object
     properties:
       id:
         type: integer
         format: int32
-      userId:
+      friendUid:
+        type: string
+      nickname:
+        type: string
+      avatar:
         type: string
       remark:
-        type: string
-      addSource:
-        type: integer
-        format: int32
-        title: 添加来源
-      friendUid:
         type: string
     title: model
   apigatewayGroupCreateReq:
@@ -230,20 +301,94 @@ definitions:
         type: string
       icon:
         type: string
-      status:
-        type: integer
-        format: int32
-      creatorUid:
-        type: string
   apigatewayGroupCreateResp:
     type: object
     properties:
       id:
         type: string
         format: uint64
+  apigatewayGroupListResp:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/apigatewayGroups'
+  apigatewayGroupMembers:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int32
+      groupId:
+        type: string
+        format: uint64
+      userId:
+        type: string
+      roleLevel:
+        type: integer
+        format: int32
+      joinTime:
+        type: string
+        format: int64
+      joinSource:
+        type: integer
+        format: int32
+      inviterUid:
+        type: string
+      operatorUid:
+        type: string
+      nickname:
+        type: string
+      userAvatarUrl:
+        type: string
+  apigatewayGroupPutInHandleReq:
+    type: object
+    properties:
+      groupReqId:
+        type: integer
+        format: int32
+      groupId:
+        type: string
+        format: uint64
+      handleResult:
+        type: integer
+        format: int32
+        title: 处理结果
+  apigatewayGroupPutInHandleResp:
+    type: object
+  apigatewayGroupPutinListResp:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/apigatewayGroupRequests'
   apigatewayGroupPutinReq:
     type: object
     properties:
+      groupId:
+        type: string
+        format: uint64
+      reqMsg:
+        type: string
+      joinSource:
+        type: integer
+        format: int32
+  apigatewayGroupPutinResp:
+    type: object
+    properties:
+      groupId:
+        type: string
+        format: uint64
+  apigatewayGroupRequests:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int32
       groupId:
         type: string
         format: uint64
@@ -259,12 +404,48 @@ definitions:
         format: int32
       inviterUid:
         type: string
-  apigatewayGroupPutinResp:
+      handleUid:
+        type: string
+      handleResult:
+        type: integer
+        format: int32
+        title: 处理结果
+      handleTime:
+        type: string
+        format: int64
+  apigatewayGroupUsersResp:
     type: object
     properties:
-      groupId:
+      List:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/apigatewayGroupMembers'
+  apigatewayGroups:
+    type: object
+    properties:
+      id:
         type: string
         format: uint64
+      name:
+        type: string
+      icon:
+        type: string
+      status:
+        type: integer
+        format: int32
+      creatorUid:
+        type: string
+      groupType:
+        type: integer
+        format: int32
+      isVerify:
+        type: boolean
+      notification:
+        type: string
+        title: 公告通知
+      notificationUid:
+        type: string
   apisocialFriendListResp:
     type: object
     properties:
@@ -387,6 +568,7 @@ definitions:
         format: int32
       groupId:
         type: string
+        format: uint64
       reqId:
         type: string
       reqMsg:
@@ -418,6 +600,7 @@ definitions:
     properties:
       id:
         type: string
+        format: uint64
       name:
         type: string
       icon:

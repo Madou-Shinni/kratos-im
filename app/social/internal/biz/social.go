@@ -234,7 +234,7 @@ func (uc *SocialUsecase) GroupPutin(ctx context.Context, req *pb.GroupPutinReq) 
 		GroupId: req.GroupId,
 		ReqMsg:  req.ReqMsg,
 		ReqTime: sql.NullTime{
-			Time:  time.Unix(req.ReqTime, 0),
+			Time:  time.Now(),
 			Valid: true,
 		},
 		JoinSource:    int(req.JoinSource),
@@ -305,6 +305,8 @@ func (uc *SocialUsecase) createGroupMember(ctx context.Context, req *pb.GroupPut
 		UserId:      req.ReqId,
 		RoleLevel:   constants.AtLargeGroupRoleLevel,
 		OperatorUid: req.InviterUid,
+		JoinSource:  int(req.JoinSource),
+		JoinTime:    time.Now(),
 	}
 	err := uc.repo.SaveGroupMember(ctx, groupMember)
 	if err != nil {
@@ -363,7 +365,7 @@ func (uc *SocialUsecase) GroupPutInHandle(ctx context.Context, req *pb.GroupPutI
 	}
 
 	return &pb.GroupPutInHandleResp{
-		GroupId: req.GroupId,
+		GroupId: greq.GroupId,
 	}, nil
 }
 
@@ -375,7 +377,7 @@ func (uc *SocialUsecase) GroupPutinList(ctx context.Context, req *pb.GroupPutinL
 
 	var list []*pb.GroupRequests
 
-	err = copier.Copy(&groupReqs, &groupReqs)
+	err = copier.Copy(&list, &groupReqs)
 	if err != nil {
 		return nil, err
 	}
