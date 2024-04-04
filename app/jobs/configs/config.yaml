@@ -24,3 +24,8 @@ data:
   ws:
     host: 127.0.0.1:10090
     patten: /ws
+msg_read_handler:
+  # 群消息合并配置
+  group_msg_merge: true # 是否开启消息合并
+  group_msg_merge_interval: 60 # 消息合并时间间隔(秒)
+  group_msg_merge_max_size: 10 # 最大消息合并数量

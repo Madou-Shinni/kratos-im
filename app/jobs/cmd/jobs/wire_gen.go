@@ -23,7 +23,7 @@ import (
 // Injectors from wire.go:
 
 // wireApp init kratos application.
-func wireApp(confServer *conf.Server, confData *conf.Data, app *conf.App, registry *conf.Registry, discovery *conf.Discovery, logger log.Logger) (*kratos.App, func(), error) {
+func wireApp(confServer *conf.Server, confData *conf.Data, app *conf.App, registry *conf.Registry, discovery *conf.Discovery, msgReadHandler *conf.MsgReadHandler, logger log.Logger) (*kratos.App, func(), error) {
 	cmdable := data.NewRedis(confData, logger)
 	client, err := data.NewMongo(confData, logger)
 	if err != nil {
@@ -41,7 +41,7 @@ func wireApp(confServer *conf.Server, confData *conf.Data, app *conf.App, regist
 	}
 	consumerRepo := data.NewConsumerRepo(dataData, logger)
 	baseMsgTransfer := biz.NewBaseMsgTransfer(consumerRepo, logger, iClient)
-	consumerUsecase := biz.NewConsumerUsecase(consumerRepo, logger, baseMsgTransfer)
+	consumerUsecase := biz.NewConsumerUsecase(consumerRepo, logger, baseMsgTransfer, msgReadHandler)
 	consumerService := service.NewConsumerService(consumerUsecase)
 	kafkaServer := server.NewKafkaServer(confData, logger, consumerService)
 	registrar := data.NewRegistrar(registry)

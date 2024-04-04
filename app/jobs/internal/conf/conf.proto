@@ -11,6 +11,7 @@ message Bootstrap {
   Registry register = 3;
   Discovery discoverer = 4;
   App app = 5;
+  MsgReadHandler msg_read_handler = 6;
 }
 
 message Registry {
@@ -80,4 +81,10 @@ message Data {
   Kafka kafka = 3;
   Mongo mongo = 4;
   Ws ws = 5;
+}
+
+message MsgReadHandler {
+  bool  group_msg_merge = 1; // 是否开启消息合并
+  int64 group_msg_merge_interval = 2; // 消息合并时间间隔(秒)
+  int64 group_msg_merge_max_size = 3; // 最大消息合并数量
 }
