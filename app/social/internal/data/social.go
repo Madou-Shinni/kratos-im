@@ -192,3 +192,13 @@ func (r *socialRepo) ListGroupReqByGid(ctx context.Context, gid uint64) ([]*mode
 	}
 	return data, nil
 }
+
+// ListGroupByIds 通过ids查询群信息
+func (r *socialRepo) ListGroupByIds(ctx context.Context, ids []uint64) ([]*model.Groups, error) {
+	var data []*model.Groups
+	err := r.data.db.Find(&data, "id in ?", ids).Error
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}

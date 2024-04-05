@@ -5,6 +5,7 @@ import (
 	"github.com/jinzhu/copier"
 	v1 "kratos-im/api/gateway"
 	imPb "kratos-im/api/im"
+	socialPb "kratos-im/api/social"
 	userPb "kratos-im/api/user"
 	"kratos-im/common"
 	"kratos-im/constants"
@@ -70,6 +71,10 @@ type GatewayRepo interface {
 	UserLogin(ctx context.Context, data *userPb.LoginRequest) (*userPb.LoginReply, error)
 	HSetOnlineUser(ctx context.Context, userId string, status bool) error
 	GetOnlineUser(ctx context.Context) (map[string]string, error)
+	GetConversations(ctx context.Context, req *imPb.GetConversationsReq) (*imPb.GetConversationsResp, error)
+	ListUserByIds(ctx context.Context, ids []string) (*userPb.ListResp, error)
+	ListGroupByIds(ctx context.Context, ids []uint64) (*socialPb.GroupMapResp, error)
+	PutConversations(ctx context.Context, req *imPb.PutConversationsReq) (*imPb.PutConversationsResp, error)
 }
 
 // GatewayUsecase is a Gateway usecase.
@@ -490,4 +495,147 @@ func (uc *GatewayUsecase) GroupMembersOnline(ctx context.Context, req *v1.GroupM
 	}
 
 	return &v1.GroupMembersOnlineResp{OnlineList: membersOnline}, nil
+}
+
+func (uc *GatewayUsecase) GetConversations(ctx context.Context, req *v1.GetConversationsReq) (*v1.GetConversationsResp, error) {
+	// 获取uid
+	uid, err := common.GetUidFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	conversations, err := uc.repo.GetConversations(ctx, &imPb.GetConversationsReq{UserId: uid})
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		groupIds = make([]uint64, 0, len(conversations.ConversationList))
+		userIds  = make([]string, 0, len(conversations.ConversationList))
+	)
+
+	// 查询用户和群信息，填充会话内容
+	for _, v := range conversations.ConversationList {
+		if v.ChatType == constants.ChatTypeSingle {
+			userIds = append(userIds, v.TargetId)
+		} else {
+			gid, _ := strconv.ParseUint(v.TargetId, 10, 64)
+			groupIds = append(groupIds, gid)
+		}
+	}
+
+	// 查询用户信息
+	usersResp, err := uc.repo.ListUserByIds(ctx, userIds)
+	if err != nil {
+		return nil, err
+	}
+
+	// 查询群信息
+	groupsResp, err := uc.repo.ListGroupByIds(ctx, groupIds)
+	if err != nil {
+		return nil, err
+	}
+
+	var res v1.GetConversationsResp
+	res.Conversations = make(map[string]*v1.Conversation, len(conversations.ConversationList))
+
+	for k, v := range conversations.ConversationList {
+		var nickname, avatar string // 填充会话内容
+
+		switch v.ChatType {
+		case constants.ChatTypeSingle:
+			if user, ok := usersResp.Users[v.TargetId]; ok {
+				nickname = user.Nickname
+				avatar = user.Avatar
+			}
+		case constants.ChatTypeGroup:
+			tid, _ := strconv.ParseUint(v.TargetId, 10, 64)
+			if group, ok := groupsResp.GroupMap[tid]; ok {
+				nickname = group.Name
+				avatar = group.Icon
+			}
+		}
+
+		res.Conversations[k] = &v1.Conversation{
+			ConversationId: v.ConversationId,
+			ChatType:       v.ChatType,
+			Total:          v.Total,
+			Read:           v.Total - v.ToRead,
+			Unread:         v.ToRead,
+			IsShow:         v.IsShow,
+			Seq:            v.Seq,
+			TargetId:       v.TargetId,
+			Nickname:       nickname,
+			Avatar:         avatar,
+		}
+	}
+
+	res.UserId = uid
+
+	return &res, nil
+}
+
+func (uc *GatewayUsecase) GetChatLog(ctx context.Context, req *v1.GetChatLogReq) (*v1.GetChatLogResp, error) {
+	chatLogs, err := uc.repo.GetChatLog(ctx, &imPb.GetChatLogReq{
+		ConversationId: req.ConversationId,
+		StartSendTime:  req.StartSendTime,
+		EndSendTime:    req.EndSendTime,
+		Count:          req.Count,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var list = make([]*v1.ChatLog, 0, len(chatLogs))
+	err = copier.Copy(&list, &chatLogs)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.GetChatLogResp{List: list}, nil
+}
+
+func (uc *GatewayUsecase) PutConversations(ctx context.Context, req *v1.PutConversationsReq) (*v1.PutConversationsResp, error) {
+	// 获取uid
+	uid, err := common.GetUidFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// 更新会话
+	var conversationList = make(map[string]*imPb.Conversation, len(req.Conversations))
+	err = copier.Copy(&conversationList, &req.Conversations)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = uc.repo.PutConversations(ctx, &imPb.PutConversationsReq{
+		UserId:           uid,
+		ConversationList: conversationList,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.PutConversationsResp{}, nil
+}
+
+func (uc *GatewayUsecase) SetUpUserConversation(ctx context.Context, req *v1.SetUpUserConversationReq) (*v1.SetUpUserConversationResp, error) {
+	// 获取uid
+	uid, err := common.GetUidFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// 建立会话
+	err = uc.repo.CreateConversation(ctx, &CreateConversationReq{
+		UserId:   uid,
+		RecvId:   req.RecvId,
+		ChatType: constants.ChatType(req.ChatType),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.SetUpUserConversationResp{}, nil
 }

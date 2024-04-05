@@ -46,6 +46,10 @@ func (s *UserService) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Logi
 	}, nil
 }
 
+func (s *UserService) List(ctx context.Context, req *pb.ListRequest) (*pb.ListResp, error) {
+	return s.uc.ListByIds(ctx, req.Ids)
+}
+
 func (s *UserService) SetRootToken() error {
 	ctx := context.Background()
 	// 生成jwt token

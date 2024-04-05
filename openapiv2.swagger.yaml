@@ -15,6 +15,98 @@ consumes:
 produces:
   - application/json
 paths:
+  /chat-log/list:
+    get:
+      summary: 获取聊天记录
+      operationId: Gateway_GetChatLog
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apigatewayGetChatLogResp'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: conversationId
+          in: query
+          required: false
+          type: string
+        - name: startSendTime
+          in: query
+          required: false
+          type: string
+          format: int64
+        - name: endSendTime
+          in: query
+          required: false
+          type: string
+          format: int64
+        - name: count
+          in: query
+          required: false
+          type: string
+          format: int64
+      tags:
+        - im
+  /conversation/list:
+    get:
+      summary: 获取会话
+      operationId: Gateway_GetConversations
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apigatewayGetConversationsResp'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - im
+  /conversation/setup:
+    post:
+      summary: 建立会话
+      operationId: Gateway_SetUpUserConversation
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apigatewaySetUpUserConversationResp'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/apigatewaySetUpUserConversationReq'
+      tags:
+        - im
+  /conversation/update:
+    put:
+      summary: 更新会话
+      operationId: Gateway_PutConversations
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apigatewayPutConversationsResp'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/apigatewayPutConversationsReq'
+      tags:
+        - im
   /friend/list:
     get:
       summary: 好友列表
@@ -285,6 +377,56 @@ paths:
       tags:
         - user
 definitions:
+  apigatewayChatLog:
+    type: object
+    properties:
+      id:
+        type: string
+      conversationId:
+        type: string
+      sendId:
+        type: string
+      recvId:
+        type: string
+      msgType:
+        type: integer
+        format: int32
+      msgContent:
+        type: string
+      chatType:
+        type: integer
+        format: int32
+      sendTime:
+        type: string
+        format: int64
+  apigatewayConversation:
+    type: object
+    properties:
+      conversationId:
+        type: string
+      chatType:
+        type: integer
+        format: int32
+      targetId:
+        type: string
+      isShow:
+        type: boolean
+      seq:
+        type: string
+        format: int64
+      read:
+        type: integer
+        format: int32
+      total:
+        type: integer
+        format: int32
+      unread:
+        type: integer
+        format: int32
+      nickname:
+        type: string
+      avatar:
+        type: string
   apigatewayFriendListResp:
     type: object
     properties:
@@ -358,6 +500,23 @@ definitions:
       remark:
         type: string
     title: model
+  apigatewayGetChatLogResp:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/apigatewayChatLog'
+  apigatewayGetConversationsResp:
+    type: object
+    properties:
+      userId:
+        type: string
+      conversations:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/apigatewayConversation'
   apigatewayGroupCreateReq:
     type: object
     properties:
@@ -510,6 +669,98 @@ definitions:
         title: 公告通知
       notificationUid:
         type: string
+  apigatewayPutConversationsReq:
+    type: object
+    properties:
+      conversations:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/apigatewayConversation'
+  apigatewayPutConversationsResp:
+    type: object
+  apigatewaySetUpUserConversationReq:
+    type: object
+    properties:
+      recvId:
+        type: string
+      chatType:
+        type: integer
+        format: int32
+  apigatewaySetUpUserConversationResp:
+    type: object
+  apiimChatLog:
+    type: object
+    properties:
+      id:
+        type: string
+      conversationId:
+        type: string
+      sendId:
+        type: string
+      recvId:
+        type: string
+      msgType:
+        type: integer
+        format: int32
+      msgContent:
+        type: string
+      chatType:
+        type: integer
+        format: int32
+      SendTime:
+        type: string
+        format: int64
+      readRecords:
+        type: string
+        format: byte
+  apiimConversation:
+    type: object
+    properties:
+      conversationId:
+        type: string
+      chatType:
+        type: integer
+        format: int32
+      targetId:
+        type: string
+      isShow:
+        type: boolean
+      seq:
+        type: string
+        format: int64
+      total:
+        type: integer
+        format: int32
+        title: 总消息数
+      toRead:
+        type: integer
+        format: int32
+        title: 未读消息数
+      Read:
+        type: integer
+        format: int32
+        title: 已读消息
+      msg:
+        $ref: '#/definitions/apiimChatLog'
+  apiimGetChatLogResp:
+    type: object
+    properties:
+      List:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/apiimChatLog'
+  apiimGetConversationsResp:
+    type: object
+    properties:
+      conversationList:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/apiimConversation'
+  apiimPutConversationsResp:
+    type: object
+  apiimSetUpUserConversationResp:
+    type: object
   apisocialFriendListResp:
     type: object
     properties:
@@ -732,82 +983,9 @@ definitions:
         type: string
       nickname:
         type: string
-  imChatLog:
-    type: object
-    properties:
-      id:
-        type: string
-      conversationId:
-        type: string
-      sendId:
-        type: string
-      recvId:
-        type: string
-      msgType:
-        type: integer
-        format: int32
-      msgContent:
-        type: string
-      chatType:
-        type: integer
-        format: int32
-      SendTime:
-        type: string
-        format: int64
-      readRecords:
-        type: string
-        format: byte
-  imConversation:
-    type: object
-    properties:
-      conversationId:
-        type: string
-      chatType:
-        type: integer
-        format: int32
-      targetId:
-        type: string
-      isShow:
-        type: boolean
-      seq:
-        type: string
-        format: int64
-      total:
-        type: integer
-        format: int32
-        title: 总消息数
-      toRead:
-        type: integer
-        format: int32
-        title: 未读消息数
-      Read:
-        type: integer
-        format: int32
-        title: 已读消息
-      msg:
-        $ref: '#/definitions/imChatLog'
   imCreateChatLogResp:
     type: object
   imCreateGroupConversationResp:
-    type: object
-  imGetChatLogResp:
-    type: object
-    properties:
-      List:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/imChatLog'
-  imGetConversationsResp:
-    type: object
-    properties:
-      conversationList:
-        type: object
-        additionalProperties:
-          $ref: '#/definitions/imConversation'
-  imPutConversationsResp:
-    type: object
-  imSetUpUserConversationResp:
     type: object
   protobufAny:
     type: object
@@ -828,6 +1006,29 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/protobufAny'
+  socialGroupMapResp:
+    type: object
+    properties:
+      groupMap:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/apisocialGroups'
+  userListResp:
+    type: object
+    properties:
+      users:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/userListRespUserInfo'
+  userListRespUserInfo:
+    type: object
+    properties:
+      userId:
+        type: string
+      avatar:
+        type: string
+      nickname:
+        type: string
   userLoginReply:
     type: object
     properties:

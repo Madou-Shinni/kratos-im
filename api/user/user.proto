@@ -8,6 +8,7 @@ option java_package = "api.user";
 
 service User {
 	rpc Login (LoginRequest) returns (LoginReply);
+	rpc List (ListRequest) returns (ListResp);
 }
 
 message LoginRequest {
@@ -23,4 +24,18 @@ message LoginReply {
 
 	UserInfo user_info = 1;
 	string token = 2;
+}
+
+message ListRequest {
+	repeated string ids = 1;
+}
+
+message ListResp {
+	message UserInfo {
+		string user_id = 1;
+		string avatar = 2;
+		string nickname = 3;
+	}
+
+	map<string, UserInfo> users = 1;
 }

@@ -89,3 +89,23 @@ func (s *GatewayService) FriendsOnline(ctx context.Context, req *pb.FriendsOnlin
 func (s *GatewayService) GroupMembersOnline(ctx context.Context, req *pb.GroupMembersOnlineReq) (*pb.GroupMembersOnlineResp, error) {
 	return s.uc.GroupMembersOnline(ctx, req)
 }
+
+// GetConversations 获取会话列表
+func (s *GatewayService) GetConversations(ctx context.Context, req *pb.GetConversationsReq) (*pb.GetConversationsResp, error) {
+	return s.uc.GetConversations(ctx, req)
+}
+
+// GetChatLog 获取聊天记录
+func (s *GatewayService) GetChatLog(ctx context.Context, req *pb.GetChatLogReq) (*pb.GetChatLogResp, error) {
+	return s.uc.GetChatLog(ctx, req)
+}
+
+// PutConversations 更新会话
+func (s *GatewayService) PutConversations(ctx context.Context, req *pb.PutConversationsReq) (*pb.PutConversationsResp, error) {
+	return s.uc.PutConversations(ctx, req)
+}
+
+// SetUpUserConversation 建立会话
+func (s *GatewayService) SetUpUserConversation(ctx context.Context, req *pb.SetUpUserConversationReq) (*pb.SetUpUserConversationResp, error) {
+	return s.uc.SetUpUserConversation(ctx, req)
+}

@@ -24,6 +24,8 @@ const OperationGatewayFriendPutIn = "/api.gateway.Gateway/FriendPutIn"
 const OperationGatewayFriendPutInHandle = "/api.gateway.Gateway/FriendPutInHandle"
 const OperationGatewayFriendPutInList = "/api.gateway.Gateway/FriendPutInList"
 const OperationGatewayFriendsOnline = "/api.gateway.Gateway/FriendsOnline"
+const OperationGatewayGetChatLog = "/api.gateway.Gateway/GetChatLog"
+const OperationGatewayGetConversations = "/api.gateway.Gateway/GetConversations"
 const OperationGatewayGetReadChatRecords = "/api.gateway.Gateway/GetReadChatRecords"
 const OperationGatewayGroupCreate = "/api.gateway.Gateway/GroupCreate"
 const OperationGatewayGroupList = "/api.gateway.Gateway/GroupList"
@@ -32,6 +34,8 @@ const OperationGatewayGroupPutInHandle = "/api.gateway.Gateway/GroupPutInHandle"
 const OperationGatewayGroupPutin = "/api.gateway.Gateway/GroupPutin"
 const OperationGatewayGroupPutinList = "/api.gateway.Gateway/GroupPutinList"
 const OperationGatewayGroupUsers = "/api.gateway.Gateway/GroupUsers"
+const OperationGatewayPutConversations = "/api.gateway.Gateway/PutConversations"
+const OperationGatewaySetUpUserConversation = "/api.gateway.Gateway/SetUpUserConversation"
 const OperationGatewayUserLogin = "/api.gateway.Gateway/UserLogin"
 
 type GatewayHTTPServer interface {
@@ -45,6 +49,10 @@ type GatewayHTTPServer interface {
 	FriendPutInList(context.Context, *FriendPutInListReq) (*FriendPutInListResp, error)
 	// FriendsOnline 在线好友情况
 	FriendsOnline(context.Context, *FriendsOnlineReq) (*FriendsOnlineResp, error)
+	// GetChatLog 获取聊天记录
+	GetChatLog(context.Context, *GetChatLogReq) (*GetChatLogResp, error)
+	// GetConversations 获取会话列表
+	GetConversations(context.Context, *GetConversationsReq) (*GetConversationsResp, error)
 	// GetReadChatRecords 获取消息已读记录
 	GetReadChatRecords(context.Context, *GetReadChatRecordsReq) (*GetReadChatRecordsResp, error)
 	// GroupCreate 创建群
@@ -61,6 +69,10 @@ type GatewayHTTPServer interface {
 	GroupPutinList(context.Context, *GroupPutinListReq) (*GroupPutinListResp, error)
 	// GroupUsers 群成员列表
 	GroupUsers(context.Context, *GroupUsersReq) (*GroupUsersResp, error)
+	// PutConversations 更新会话
+	PutConversations(context.Context, *PutConversationsReq) (*PutConversationsResp, error)
+	// SetUpUserConversation 建立会话
+	SetUpUserConversation(context.Context, *SetUpUserConversationReq) (*SetUpUserConversationResp, error)
 	// UserLogin 用户登录
 	UserLogin(context.Context, *UserLoginReq) (*UserLoginResp, error)
 }
@@ -79,6 +91,10 @@ func RegisterGatewayHTTPServer(s *http.Server, srv GatewayHTTPServer) {
 	r.GET("/friend/list", _Gateway_FriendList0_HTTP_Handler(srv))
 	r.GET("/friend/online", _Gateway_FriendsOnline0_HTTP_Handler(srv))
 	r.GET("/group/online", _Gateway_GroupMembersOnline0_HTTP_Handler(srv))
+	r.POST("/conversation/setup", _Gateway_SetUpUserConversation0_HTTP_Handler(srv))
+	r.GET("/conversation/list", _Gateway_GetConversations0_HTTP_Handler(srv))
+	r.PUT("/conversation/update", _Gateway_PutConversations0_HTTP_Handler(srv))
+	r.GET("/chat-log/list", _Gateway_GetChatLog0_HTTP_Handler(srv))
 	r.GET("/read-chat-records/list", _Gateway_GetReadChatRecords0_HTTP_Handler(srv))
 	r.POST("/user/login", _Gateway_UserLogin0_HTTP_Handler(srv))
 }
@@ -326,6 +342,88 @@ func _Gateway_GroupMembersOnline0_HTTP_Handler(srv GatewayHTTPServer) func(ctx h
 	}
 }
 
+func _Gateway_SetUpUserConversation0_HTTP_Handler(srv GatewayHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in SetUpUserConversationReq
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationGatewaySetUpUserConversation)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.SetUpUserConversation(ctx, req.(*SetUpUserConversationReq))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*SetUpUserConversationResp)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Gateway_GetConversations0_HTTP_Handler(srv GatewayHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetConversationsReq
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationGatewayGetConversations)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetConversations(ctx, req.(*GetConversationsReq))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetConversationsResp)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Gateway_PutConversations0_HTTP_Handler(srv GatewayHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in PutConversationsReq
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationGatewayPutConversations)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.PutConversations(ctx, req.(*PutConversationsReq))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*PutConversationsResp)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Gateway_GetChatLog0_HTTP_Handler(srv GatewayHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetChatLogReq
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationGatewayGetChatLog)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetChatLog(ctx, req.(*GetChatLogReq))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetChatLogResp)
+		return ctx.Result(200, reply)
+	}
+}
+
 func _Gateway_GetReadChatRecords0_HTTP_Handler(srv GatewayHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in GetReadChatRecordsReq
@@ -373,6 +471,8 @@ type GatewayHTTPClient interface {
 	FriendPutInHandle(ctx context.Context, req *FriendPutInHandleReq, opts ...http.CallOption) (rsp *FriendPutInHandleResp, err error)
 	FriendPutInList(ctx context.Context, req *FriendPutInListReq, opts ...http.CallOption) (rsp *FriendPutInListResp, err error)
 	FriendsOnline(ctx context.Context, req *FriendsOnlineReq, opts ...http.CallOption) (rsp *FriendsOnlineResp, err error)
+	GetChatLog(ctx context.Context, req *GetChatLogReq, opts ...http.CallOption) (rsp *GetChatLogResp, err error)
+	GetConversations(ctx context.Context, req *GetConversationsReq, opts ...http.CallOption) (rsp *GetConversationsResp, err error)
 	GetReadChatRecords(ctx context.Context, req *GetReadChatRecordsReq, opts ...http.CallOption) (rsp *GetReadChatRecordsResp, err error)
 	GroupCreate(ctx context.Context, req *GroupCreateReq, opts ...http.CallOption) (rsp *GroupCreateResp, err error)
 	GroupList(ctx context.Context, req *GroupListReq, opts ...http.CallOption) (rsp *GroupListResp, err error)
@@ -381,6 +481,8 @@ type GatewayHTTPClient interface {
 	GroupPutin(ctx context.Context, req *GroupPutinReq, opts ...http.CallOption) (rsp *GroupPutinResp, err error)
 	GroupPutinList(ctx context.Context, req *GroupPutinListReq, opts ...http.CallOption) (rsp *GroupPutinListResp, err error)
 	GroupUsers(ctx context.Context, req *GroupUsersReq, opts ...http.CallOption) (rsp *GroupUsersResp, err error)
+	PutConversations(ctx context.Context, req *PutConversationsReq, opts ...http.CallOption) (rsp *PutConversationsResp, err error)
+	SetUpUserConversation(ctx context.Context, req *SetUpUserConversationReq, opts ...http.CallOption) (rsp *SetUpUserConversationResp, err error)
 	UserLogin(ctx context.Context, req *UserLoginReq, opts ...http.CallOption) (rsp *UserLoginResp, err error)
 }
 
@@ -449,6 +551,32 @@ func (c *GatewayHTTPClientImpl) FriendsOnline(ctx context.Context, in *FriendsOn
 	pattern := "/friend/online"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationGatewayFriendsOnline))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *GatewayHTTPClientImpl) GetChatLog(ctx context.Context, in *GetChatLogReq, opts ...http.CallOption) (*GetChatLogResp, error) {
+	var out GetChatLogResp
+	pattern := "/chat-log/list"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationGatewayGetChatLog))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *GatewayHTTPClientImpl) GetConversations(ctx context.Context, in *GetConversationsReq, opts ...http.CallOption) (*GetConversationsResp, error) {
+	var out GetConversationsResp
+	pattern := "/conversation/list"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationGatewayGetConversations))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {
@@ -555,6 +683,32 @@ func (c *GatewayHTTPClientImpl) GroupUsers(ctx context.Context, in *GroupUsersRe
 	opts = append(opts, http.Operation(OperationGatewayGroupUsers))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *GatewayHTTPClientImpl) PutConversations(ctx context.Context, in *PutConversationsReq, opts ...http.CallOption) (*PutConversationsResp, error) {
+	var out PutConversationsResp
+	pattern := "/conversation/update"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationGatewayPutConversations))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *GatewayHTTPClientImpl) SetUpUserConversation(ctx context.Context, in *SetUpUserConversationReq, opts ...http.CallOption) (*SetUpUserConversationResp, error) {
+	var out SetUpUserConversationResp
+	pattern := "/conversation/setup"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationGatewaySetUpUserConversation))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

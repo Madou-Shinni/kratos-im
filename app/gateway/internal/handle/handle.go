@@ -54,7 +54,7 @@ func Chat(s *service.GatewayService) rws.HandleFunc {
 			RecvId:         data.RecvId,
 			MType:          data.MType,
 			Content:        data.Content,
-			SendTime:       time.Now().UnixNano(),
+			SendTime:       time.Now().UnixMilli(),
 		})
 		if err != nil {
 			svr.SendByConns(rws.NewErrMessage(err), conn)

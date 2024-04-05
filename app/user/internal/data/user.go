@@ -37,3 +37,13 @@ func (u userRepo) Save(ctx context.Context, user *model.User) (*model.User, erro
 
 	return user, nil
 }
+
+func (u userRepo) ListByIds(ctx context.Context, ids []string) ([]*model.User, error) {
+	var users []*model.User
+	err := u.data.db.Where("id in ?", ids).First(&users).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}

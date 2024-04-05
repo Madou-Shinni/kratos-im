@@ -63,3 +63,7 @@ func (s *SocialService) GroupList(ctx context.Context, req *pb.GroupListReq) (*p
 func (s *SocialService) GroupUsers(ctx context.Context, req *pb.GroupUsersReq) (*pb.GroupUsersResp, error) {
 	return s.uc.GroupUsers(ctx, req)
 }
+
+func (s *SocialService) GroupMap(ctx context.Context, req *pb.GroupMapReq) (*pb.GroupMapResp, error) {
+	return s.uc.GroupMap(ctx, req)
+}

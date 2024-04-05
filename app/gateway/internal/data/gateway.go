@@ -261,3 +261,41 @@ func (r *gatewayRepo) HSetOnlineUser(ctx context.Context, userId string, status 
 func (r *gatewayRepo) GetOnlineUser(ctx context.Context) (map[string]string, error) {
 	return r.data.rdb.HGetAll(ctx, constants.OnlineUserKey).Result()
 }
+
+// GetConversations 获取会话列表
+func (r *gatewayRepo) GetConversations(ctx context.Context, req *imPb.GetConversationsReq) (*imPb.GetConversationsResp, error) {
+	resp, err := r.data.imClient.GetConversations(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+// PutConversations 更新会话
+func (r *gatewayRepo) PutConversations(ctx context.Context, req *imPb.PutConversationsReq) (*imPb.PutConversationsResp, error) {
+	resp, err := r.data.imClient.PutConversations(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+// ListUserByIds 查询用户列表
+func (r *gatewayRepo) ListUserByIds(ctx context.Context, ids []string) (*userPb.ListResp, error) {
+	resp, err := r.data.userClient.List(ctx, &userPb.ListRequest{Ids: ids})
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+// ListGroupByIds 查询群列表
+func (r *gatewayRepo) ListGroupByIds(ctx context.Context, ids []uint64) (*socialPb.GroupMapResp, error) {
+	resp, err := r.data.socialClient.GroupMap(ctx, &socialPb.GroupMapReq{GroupIds: ids})
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}

@@ -28,6 +28,7 @@ const (
 	Social_GroupPutinList_FullMethodName    = "/api.social.Social/GroupPutinList"
 	Social_GroupPutInHandle_FullMethodName  = "/api.social.Social/GroupPutInHandle"
 	Social_GroupList_FullMethodName         = "/api.social.Social/GroupList"
+	Social_GroupMap_FullMethodName          = "/api.social.Social/GroupMap"
 	Social_GroupUsers_FullMethodName        = "/api.social.Social/GroupUsers"
 )
 
@@ -46,6 +47,7 @@ type SocialClient interface {
 	GroupPutinList(ctx context.Context, in *GroupPutinListReq, opts ...grpc.CallOption) (*GroupPutinListResp, error)
 	GroupPutInHandle(ctx context.Context, in *GroupPutInHandleReq, opts ...grpc.CallOption) (*GroupPutInHandleResp, error)
 	GroupList(ctx context.Context, in *GroupListReq, opts ...grpc.CallOption) (*GroupListResp, error)
+	GroupMap(ctx context.Context, in *GroupMapReq, opts ...grpc.CallOption) (*GroupMapResp, error)
 	GroupUsers(ctx context.Context, in *GroupUsersReq, opts ...grpc.CallOption) (*GroupUsersResp, error)
 }
 
@@ -138,6 +140,15 @@ func (c *socialClient) GroupList(ctx context.Context, in *GroupListReq, opts ...
 	return out, nil
 }
 
+func (c *socialClient) GroupMap(ctx context.Context, in *GroupMapReq, opts ...grpc.CallOption) (*GroupMapResp, error) {
+	out := new(GroupMapResp)
+	err := c.cc.Invoke(ctx, Social_GroupMap_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *socialClient) GroupUsers(ctx context.Context, in *GroupUsersReq, opts ...grpc.CallOption) (*GroupUsersResp, error) {
 	out := new(GroupUsersResp)
 	err := c.cc.Invoke(ctx, Social_GroupUsers_FullMethodName, in, out, opts...)
@@ -162,6 +173,7 @@ type SocialServer interface {
 	GroupPutinList(context.Context, *GroupPutinListReq) (*GroupPutinListResp, error)
 	GroupPutInHandle(context.Context, *GroupPutInHandleReq) (*GroupPutInHandleResp, error)
 	GroupList(context.Context, *GroupListReq) (*GroupListResp, error)
+	GroupMap(context.Context, *GroupMapReq) (*GroupMapResp, error)
 	GroupUsers(context.Context, *GroupUsersReq) (*GroupUsersResp, error)
 	mustEmbedUnimplementedSocialServer()
 }
@@ -196,6 +208,9 @@ func (UnimplementedSocialServer) GroupPutInHandle(context.Context, *GroupPutInHa
 }
 func (UnimplementedSocialServer) GroupList(context.Context, *GroupListReq) (*GroupListResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GroupList not implemented")
+}
+func (UnimplementedSocialServer) GroupMap(context.Context, *GroupMapReq) (*GroupMapResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GroupMap not implemented")
 }
 func (UnimplementedSocialServer) GroupUsers(context.Context, *GroupUsersReq) (*GroupUsersResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GroupUsers not implemented")
@@ -375,6 +390,24 @@ func _Social_GroupList_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Social_GroupMap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GroupMapReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SocialServer).GroupMap(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Social_GroupMap_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SocialServer).GroupMap(ctx, req.(*GroupMapReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Social_GroupUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GroupUsersReq)
 	if err := dec(in); err != nil {
@@ -435,6 +468,10 @@ var Social_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GroupList",
 			Handler:    _Social_GroupList_Handler,
+		},
+		{
+			MethodName: "GroupMap",
+			Handler:    _Social_GroupMap_Handler,
 		},
 		{
 			MethodName: "GroupUsers",

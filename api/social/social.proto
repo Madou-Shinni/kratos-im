@@ -21,6 +21,7 @@ service Social {
 	rpc GroupPutinList(GroupPutinListReq) returns (GroupPutinListResp);
 	rpc GroupPutInHandle(GroupPutInHandleReq) returns(GroupPutInHandleResp);
 	rpc GroupList(GroupListReq) returns (GroupListResp);
+	rpc GroupMap(GroupMapReq) returns (GroupMapResp);
 	rpc GroupUsers(GroupUsersReq) returns (GroupUsersResp);
 }
 
@@ -161,4 +162,12 @@ message GroupUsersReq {
 }
 message GroupUsersResp {
 	repeated GroupMembers List = 1;
+}
+
+message GroupMapReq {
+	repeated uint64 groupIds = 1;
+}
+
+message GroupMapResp {
+	map<uint64, Groups> groupMap = 1;
 }

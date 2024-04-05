@@ -116,6 +116,8 @@ func (uc *IMUsecase) GetConversations(ctx context.Context, req *pb.GetConversati
 		}
 
 		total := res.ConversationList[conversation.ConversationId].Total
+		res.ConversationList[conversation.ConversationId].Seq = conversation.Seq
+		res.ConversationList[conversation.ConversationId].TargetId = conversation.Msg.RecvId
 		if total < int32(conversation.Total) {
 			// 有新的消息
 			res.ConversationList[conversation.ConversationId].Total = int32(conversation.Total)

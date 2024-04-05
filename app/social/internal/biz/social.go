@@ -47,6 +47,7 @@ type SocialRepo interface {
 	FirstGroupReqById(ctx context.Context, id uint64) (*model.GroupRequests, error)
 	UpdateGroupReq(ctx context.Context, freq *model.GroupRequests) error
 	ListGroupReqByGid(ctx context.Context, groupId uint64) ([]*model.GroupRequests, error)
+	ListGroupByIds(ctx context.Context, ids []uint64) ([]*model.Groups, error)
 }
 
 // SocialUsecase is a Social usecase.
@@ -415,5 +416,29 @@ func (uc *SocialUsecase) GroupUsers(ctx context.Context, req *pb.GroupUsersReq) 
 
 	return &pb.GroupUsersResp{
 		List: list,
+	}, nil
+}
+
+func (uc *SocialUsecase) GroupMap(ctx context.Context, req *pb.GroupMapReq) (*pb.GroupMapResp, error) {
+	groups, err := uc.repo.ListGroupByIds(ctx, req.GroupIds)
+	if err != nil {
+		return nil, err
+	}
+
+	var list = make(map[uint64]*pb.Groups, len(groups))
+
+	for _, group := range groups {
+		list[group.ID] = &pb.Groups{
+			Id:         group.ID,
+			Name:       group.Name,
+			Icon:       group.Icon,
+			Status:     int32(group.Status),
+			CreatorUid: group.CreatorUid,
+			GroupType:  int32(group.GroupType),
+		}
+	}
+
+	return &pb.GroupMapResp{
+		GroupMap: list,
 	}, nil
 }

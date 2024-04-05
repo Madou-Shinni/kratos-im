@@ -19,20 +19,24 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Gateway_GroupCreate_FullMethodName        = "/api.gateway.Gateway/GroupCreate"
-	Gateway_GroupPutin_FullMethodName         = "/api.gateway.Gateway/GroupPutin"
-	Gateway_GroupPutinList_FullMethodName     = "/api.gateway.Gateway/GroupPutinList"
-	Gateway_GroupPutInHandle_FullMethodName   = "/api.gateway.Gateway/GroupPutInHandle"
-	Gateway_GroupList_FullMethodName          = "/api.gateway.Gateway/GroupList"
-	Gateway_GroupUsers_FullMethodName         = "/api.gateway.Gateway/GroupUsers"
-	Gateway_FriendPutIn_FullMethodName        = "/api.gateway.Gateway/FriendPutIn"
-	Gateway_FriendPutInHandle_FullMethodName  = "/api.gateway.Gateway/FriendPutInHandle"
-	Gateway_FriendPutInList_FullMethodName    = "/api.gateway.Gateway/FriendPutInList"
-	Gateway_FriendList_FullMethodName         = "/api.gateway.Gateway/FriendList"
-	Gateway_FriendsOnline_FullMethodName      = "/api.gateway.Gateway/FriendsOnline"
-	Gateway_GroupMembersOnline_FullMethodName = "/api.gateway.Gateway/GroupMembersOnline"
-	Gateway_GetReadChatRecords_FullMethodName = "/api.gateway.Gateway/GetReadChatRecords"
-	Gateway_UserLogin_FullMethodName          = "/api.gateway.Gateway/UserLogin"
+	Gateway_GroupCreate_FullMethodName           = "/api.gateway.Gateway/GroupCreate"
+	Gateway_GroupPutin_FullMethodName            = "/api.gateway.Gateway/GroupPutin"
+	Gateway_GroupPutinList_FullMethodName        = "/api.gateway.Gateway/GroupPutinList"
+	Gateway_GroupPutInHandle_FullMethodName      = "/api.gateway.Gateway/GroupPutInHandle"
+	Gateway_GroupList_FullMethodName             = "/api.gateway.Gateway/GroupList"
+	Gateway_GroupUsers_FullMethodName            = "/api.gateway.Gateway/GroupUsers"
+	Gateway_FriendPutIn_FullMethodName           = "/api.gateway.Gateway/FriendPutIn"
+	Gateway_FriendPutInHandle_FullMethodName     = "/api.gateway.Gateway/FriendPutInHandle"
+	Gateway_FriendPutInList_FullMethodName       = "/api.gateway.Gateway/FriendPutInList"
+	Gateway_FriendList_FullMethodName            = "/api.gateway.Gateway/FriendList"
+	Gateway_FriendsOnline_FullMethodName         = "/api.gateway.Gateway/FriendsOnline"
+	Gateway_GroupMembersOnline_FullMethodName    = "/api.gateway.Gateway/GroupMembersOnline"
+	Gateway_SetUpUserConversation_FullMethodName = "/api.gateway.Gateway/SetUpUserConversation"
+	Gateway_GetConversations_FullMethodName      = "/api.gateway.Gateway/GetConversations"
+	Gateway_PutConversations_FullMethodName      = "/api.gateway.Gateway/PutConversations"
+	Gateway_GetChatLog_FullMethodName            = "/api.gateway.Gateway/GetChatLog"
+	Gateway_GetReadChatRecords_FullMethodName    = "/api.gateway.Gateway/GetReadChatRecords"
+	Gateway_UserLogin_FullMethodName             = "/api.gateway.Gateway/UserLogin"
 )
 
 // GatewayClient is the client API for Gateway service.
@@ -63,6 +67,14 @@ type GatewayClient interface {
 	FriendsOnline(ctx context.Context, in *FriendsOnlineReq, opts ...grpc.CallOption) (*FriendsOnlineResp, error)
 	// 在线群成员情况
 	GroupMembersOnline(ctx context.Context, in *GroupMembersOnlineReq, opts ...grpc.CallOption) (*GroupMembersOnlineResp, error)
+	// 建立会话
+	SetUpUserConversation(ctx context.Context, in *SetUpUserConversationReq, opts ...grpc.CallOption) (*SetUpUserConversationResp, error)
+	// 获取会话列表
+	GetConversations(ctx context.Context, in *GetConversationsReq, opts ...grpc.CallOption) (*GetConversationsResp, error)
+	// 更新会话
+	PutConversations(ctx context.Context, in *PutConversationsReq, opts ...grpc.CallOption) (*PutConversationsResp, error)
+	// 获取聊天记录
+	GetChatLog(ctx context.Context, in *GetChatLogReq, opts ...grpc.CallOption) (*GetChatLogResp, error)
 	// 获取消息已读记录
 	GetReadChatRecords(ctx context.Context, in *GetReadChatRecordsReq, opts ...grpc.CallOption) (*GetReadChatRecordsResp, error)
 	// 用户登录
@@ -185,6 +197,42 @@ func (c *gatewayClient) GroupMembersOnline(ctx context.Context, in *GroupMembers
 	return out, nil
 }
 
+func (c *gatewayClient) SetUpUserConversation(ctx context.Context, in *SetUpUserConversationReq, opts ...grpc.CallOption) (*SetUpUserConversationResp, error) {
+	out := new(SetUpUserConversationResp)
+	err := c.cc.Invoke(ctx, Gateway_SetUpUserConversation_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) GetConversations(ctx context.Context, in *GetConversationsReq, opts ...grpc.CallOption) (*GetConversationsResp, error) {
+	out := new(GetConversationsResp)
+	err := c.cc.Invoke(ctx, Gateway_GetConversations_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) PutConversations(ctx context.Context, in *PutConversationsReq, opts ...grpc.CallOption) (*PutConversationsResp, error) {
+	out := new(PutConversationsResp)
+	err := c.cc.Invoke(ctx, Gateway_PutConversations_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) GetChatLog(ctx context.Context, in *GetChatLogReq, opts ...grpc.CallOption) (*GetChatLogResp, error) {
+	out := new(GetChatLogResp)
+	err := c.cc.Invoke(ctx, Gateway_GetChatLog_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *gatewayClient) GetReadChatRecords(ctx context.Context, in *GetReadChatRecordsReq, opts ...grpc.CallOption) (*GetReadChatRecordsResp, error) {
 	out := new(GetReadChatRecordsResp)
 	err := c.cc.Invoke(ctx, Gateway_GetReadChatRecords_FullMethodName, in, out, opts...)
@@ -231,6 +279,14 @@ type GatewayServer interface {
 	FriendsOnline(context.Context, *FriendsOnlineReq) (*FriendsOnlineResp, error)
 	// 在线群成员情况
 	GroupMembersOnline(context.Context, *GroupMembersOnlineReq) (*GroupMembersOnlineResp, error)
+	// 建立会话
+	SetUpUserConversation(context.Context, *SetUpUserConversationReq) (*SetUpUserConversationResp, error)
+	// 获取会话列表
+	GetConversations(context.Context, *GetConversationsReq) (*GetConversationsResp, error)
+	// 更新会话
+	PutConversations(context.Context, *PutConversationsReq) (*PutConversationsResp, error)
+	// 获取聊天记录
+	GetChatLog(context.Context, *GetChatLogReq) (*GetChatLogResp, error)
 	// 获取消息已读记录
 	GetReadChatRecords(context.Context, *GetReadChatRecordsReq) (*GetReadChatRecordsResp, error)
 	// 用户登录
@@ -277,6 +333,18 @@ func (UnimplementedGatewayServer) FriendsOnline(context.Context, *FriendsOnlineR
 }
 func (UnimplementedGatewayServer) GroupMembersOnline(context.Context, *GroupMembersOnlineReq) (*GroupMembersOnlineResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GroupMembersOnline not implemented")
+}
+func (UnimplementedGatewayServer) SetUpUserConversation(context.Context, *SetUpUserConversationReq) (*SetUpUserConversationResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetUpUserConversation not implemented")
+}
+func (UnimplementedGatewayServer) GetConversations(context.Context, *GetConversationsReq) (*GetConversationsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetConversations not implemented")
+}
+func (UnimplementedGatewayServer) PutConversations(context.Context, *PutConversationsReq) (*PutConversationsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PutConversations not implemented")
+}
+func (UnimplementedGatewayServer) GetChatLog(context.Context, *GetChatLogReq) (*GetChatLogResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetChatLog not implemented")
 }
 func (UnimplementedGatewayServer) GetReadChatRecords(context.Context, *GetReadChatRecordsReq) (*GetReadChatRecordsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReadChatRecords not implemented")
@@ -513,6 +581,78 @@ func _Gateway_GroupMembersOnline_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Gateway_SetUpUserConversation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetUpUserConversationReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).SetUpUserConversation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_SetUpUserConversation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).SetUpUserConversation(ctx, req.(*SetUpUserConversationReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_GetConversations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetConversationsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).GetConversations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_GetConversations_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).GetConversations(ctx, req.(*GetConversationsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_PutConversations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PutConversationsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).PutConversations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_PutConversations_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).PutConversations(ctx, req.(*PutConversationsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_GetChatLog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetChatLogReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).GetChatLog(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_GetChatLog_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).GetChatLog(ctx, req.(*GetChatLogReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Gateway_GetReadChatRecords_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetReadChatRecordsReq)
 	if err := dec(in); err != nil {
@@ -603,6 +743,22 @@ var Gateway_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GroupMembersOnline",
 			Handler:    _Gateway_GroupMembersOnline_Handler,
+		},
+		{
+			MethodName: "SetUpUserConversation",
+			Handler:    _Gateway_SetUpUserConversation_Handler,
+		},
+		{
+			MethodName: "GetConversations",
+			Handler:    _Gateway_GetConversations_Handler,
+		},
+		{
+			MethodName: "PutConversations",
+			Handler:    _Gateway_PutConversations_Handler,
+		},
+		{
+			MethodName: "GetChatLog",
+			Handler:    _Gateway_GetChatLog_Handler,
 		},
 		{
 			MethodName: "GetReadChatRecords",

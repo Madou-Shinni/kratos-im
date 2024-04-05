@@ -2,3 +2,4 @@ discoverer:
   service:
     im: kratos-im:im-service
     social: kratos-im:social-service
+    user: kratos-im:user-service

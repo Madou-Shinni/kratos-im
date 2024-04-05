@@ -179,55 +179,55 @@ service Gateway {
     };
   }
 
-//  // 建立会话
-//  rpc SetUpUserConversation(SetUpUserConversationReq) returns(SetUpUserConversationResp) {
-//    option (google.api.http) = {
-//      post: "/conversation/setup"
-//      body: "*"
-//    };
-//
-//    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-//      summary: "建立会话"
-//      tags: ["im"]
-//    };
-//  }
-//
-//  // 获取会话
-//  rpc GetConversations(GetConversationsReq) returns(GetConversationsResp) {
-//    option (google.api.http) = {
-//      get: "/conversation/list"
-//    };
-//
-//    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-//      summary: "获取会话"
-//      tags: ["im"]
-//    };
-//  }
-//
-//  // 更新会话
-//  rpc PutConversations(PutConversationsReq)  returns(PutConversationsResp) {
-//    option (google.api.http) = {
-//      put: "/conversation/update"
-//      body: "*"
-//    };
-//
-//    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-//      summary: "更新会话"
-//      tags: ["im"]
-//    };
-//  }
-//
-//  // 获取聊天记录
-//  rpc GetMessages(GetChatLogReq) returns(GetChatLogResp) {
-//    option (google.api.http) = {
-//      get: "/chat-log/list"
-//    };
-//
-//    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-//      summary: "获取聊天记录"
-//      tags: ["im"]
-//    };
-//  }
+  // 建立会话
+  rpc SetUpUserConversation(SetUpUserConversationReq) returns(SetUpUserConversationResp) {
+    option (google.api.http) = {
+      post: "/conversation/setup"
+      body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "建立会话"
+      tags: ["im"]
+    };
+  }
+
+  // 获取会话列表
+  rpc GetConversations(GetConversationsReq) returns(GetConversationsResp) {
+    option (google.api.http) = {
+      get: "/conversation/list"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "获取会话"
+      tags: ["im"]
+    };
+  }
+
+  // 更新会话
+  rpc PutConversations(PutConversationsReq)  returns(PutConversationsResp) {
+    option (google.api.http) = {
+      put: "/conversation/update"
+      body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "更新会话"
+      tags: ["im"]
+    };
+  }
+
+  // 获取聊天记录
+  rpc GetChatLog(GetChatLogReq) returns(GetChatLogResp) {
+    option (google.api.http) = {
+      get: "/chat-log/list"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "获取聊天记录"
+      tags: ["im"]
+    };
+  }
 
     // 获取消息已读记录
   rpc GetReadChatRecords(GetReadChatRecordsReq) returns(GetReadChatRecordsResp) {
@@ -254,6 +254,61 @@ service Gateway {
     };
   }
 }
+
+message ChatLog {
+  string id = 1;
+  string conversationId = 2;
+  string sendId = 3;
+  string recvId = 4;
+  int32 msgType = 5;
+  string msgContent = 6;
+  int32 chatType = 7;
+  int64 sendTime = 8;
+}
+
+message Conversation {
+  string conversationId = 1;
+  int32  chatType = 2;
+  string targetId = 3;
+  bool   isShow = 4;
+  int64  seq = 5;
+  int32  read = 6;
+  int32  total = 7;
+  int32  unread = 8;
+  string nickname = 9;
+  string avatar = 10;
+}
+
+message GetChatLogReq {
+  string conversationId = 1;
+  int64  startSendTime = 2;
+  int64  endSendTime = 3;
+  int64  count = 4;
+}
+
+message GetChatLogResp {
+  repeated ChatLog list = 1;
+}
+
+message PutConversationsReq {
+  map<string,Conversation> conversations = 1;
+}
+
+message PutConversationsResp {}
+
+message GetConversationsReq {}
+
+message GetConversationsResp {
+  string user_id = 1;
+  map<string,Conversation> conversations = 2;
+}
+
+message SetUpUserConversationReq {
+  string recvId = 1;
+  int32  chatType = 2;
+}
+
+message SetUpUserConversationResp {}
 
 message GroupMembersOnlineReq {
   uint64 group_id = 1;

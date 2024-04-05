@@ -5,6 +5,7 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	v1 "kratos-im/api/user"
 	"kratos-im/app/user/internal/conf"
 	"kratos-im/constants"
 	"kratos-im/model"
@@ -21,6 +22,7 @@ type LoginResp struct {
 // UserRepo is a Greater repo.
 type UserRepo interface {
 	Save(context.Context, *model.User) (*model.User, error)
+	ListByIds(ctx context.Context, ids []string) ([]*model.User, error)
 }
 
 // UserUsecase is a User usecase.
@@ -90,5 +92,31 @@ func (uc *UserUsecase) Login(ctx context.Context, code string) (*LoginResp, erro
 	return &LoginResp{
 		Token: token,
 		User:  userInfo,
+	}, nil
+}
+
+func (uc *UserUsecase) ListByIds(ctx context.Context, ids []string) (*v1.ListResp, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+
+	users, err := uc.repo.ListByIds(ctx, ids)
+	if err != nil {
+		uc.log.Errorf("uc.repo.ListByIds(ctx, ids) err: %v", err)
+		return nil, err
+	}
+
+	var userMap = make(map[string]*v1.ListResp_UserInfo, len(users))
+
+	for _, user := range users {
+		userMap[user.ID] = &v1.ListResp_UserInfo{
+			UserId:   user.ID,
+			Nickname: user.Nickname,
+			Avatar:   user.Avatar,
+		}
+	}
+
+	return &v1.ListResp{
+		Users: userMap,
 	}, nil
 }
