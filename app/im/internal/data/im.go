@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"kratos-im/app/im/internal/biz"
 	"kratos-im/model"
+	"time"
 
 	"github.com/go-kratos/kratos/v2/log"
 )
@@ -147,6 +148,7 @@ func (r *imRepo) UpdateMsg(ctx context.Context, chatLog *model.ChatLog) error {
 }
 
 func (r *imRepo) UpdateConversations(ctx context.Context, data *model.Conversations) error {
+	data.UpdateAt = time.Now()
 	_, err := r.data.mongoDatabase.Collection(model.Conversations{}.Collection()).UpdateOne(ctx,
 		bson.D{{"_id", data.ID}},
 		bson.M{
@@ -158,6 +160,9 @@ func (r *imRepo) UpdateConversations(ctx context.Context, data *model.Conversati
 }
 
 func (r *imRepo) CreateConversation(ctx context.Context, conversation model.Conversation) error {
+	conversation.CreateAt = time.Now()
+	conversation.UpdateAt = time.Now()
+
 	_, err := r.data.mongoDatabase.Collection(model.Conversation{}.Collection()).InsertOne(context.Background(), conversation)
 	if err != nil {
 		return err
