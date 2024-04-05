@@ -34,6 +34,7 @@ message Discovery {
   message Service {
     string im = 1;
     string social = 2;
+    string user = 3;
   }
   Service service = 1;
 }
@@ -61,6 +62,8 @@ message Data {
     string addr = 2;
     google.protobuf.Duration read_timeout = 3;
     google.protobuf.Duration write_timeout = 4;
+    string password = 5;
+    int32 db = 6;
   }
   message Kafka {
     repeated string brokers = 1;

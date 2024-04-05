@@ -17,7 +17,6 @@ message LoginReply {
 	message UserInfo {
 		string token = 1;
 		string user_id = 2;
-		string username = 3;
 		string avatar = 4;
 		string nickname = 7;
 	}

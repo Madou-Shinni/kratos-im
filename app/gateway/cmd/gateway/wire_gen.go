@@ -24,11 +24,13 @@ import (
 
 // wireApp init kratos application.
 func wireApp(confServer *conf.Server, confData *conf.Data, discovery *conf.Discovery, app *conf.App, registry *conf.Registry, auth *conf.Auth, logger log.Logger) (*kratos.App, func(), error) {
+	cmdable := data.NewRedis(confData, logger)
 	broker := data.NewMQClient(confData, logger)
 	registryDiscovery := data.NewDiscovery(registry)
 	imClient := data.NewIMServiceClient(discovery, registryDiscovery)
 	socialClient := data.NewSocialServiceClient(discovery, registryDiscovery)
-	dataData, cleanup, err := data.NewData(confData, logger, broker, imClient, socialClient)
+	userClient := data.NewUserServiceClient(discovery, registryDiscovery)
+	dataData, cleanup, err := data.NewData(confData, logger, cmdable, broker, imClient, socialClient, userClient)
 	if err != nil {
 		return nil, nil, err
 	}

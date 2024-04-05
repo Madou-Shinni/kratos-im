@@ -30,6 +30,21 @@ paths:
             $ref: '#/definitions/rpcStatus'
       tags:
         - social
+  /friend/online:
+    get:
+      summary: 在线好友情况
+      operationId: Gateway_FriendsOnline
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/gatewayFriendsOnlineResp'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - social
   /friend/putin:
     put:
       summary: 好友申请
@@ -121,6 +136,27 @@ paths:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/rpcStatus'
+      tags:
+        - social
+  /group/online:
+    get:
+      summary: 在线群成员情况
+      operationId: Gateway_GroupMembersOnline
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/gatewayGroupMembersOnlineResp'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: groupId
+          in: query
+          required: false
+          type: string
+          format: uint64
       tags:
         - social
   /group/putin:
@@ -227,20 +263,28 @@ paths:
           type: string
       tags:
         - im
+  /user/login:
+    post:
+      summary: 用户登录
+      operationId: Gateway_UserLogin
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/gatewayUserLoginResp'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/gatewayUserLoginReq'
+      tags:
+        - user
 definitions:
-  LoginReplyUserInfo:
-    type: object
-    properties:
-      token:
-        type: string
-      userId:
-        type: string
-      username:
-        type: string
-      avatar:
-        type: string
-      nickname:
-        type: string
   apigatewayFriendListResp:
     type: object
     properties:
@@ -640,6 +684,13 @@ definitions:
         title: 公告通知
       notificationUid:
         type: string
+  gatewayFriendsOnlineResp:
+    type: object
+    properties:
+      onlineList:
+        type: object
+        additionalProperties:
+          type: boolean
   gatewayGetReadChatRecordsResp:
     type: object
     properties:
@@ -651,6 +702,36 @@ definitions:
         type: array
         items:
           type: string
+  gatewayGroupMembersOnlineResp:
+    type: object
+    properties:
+      onlineList:
+        type: object
+        additionalProperties:
+          type: boolean
+  gatewayUserLoginReq:
+    type: object
+    properties:
+      code:
+        type: string
+  gatewayUserLoginResp:
+    type: object
+    properties:
+      userInfo:
+        $ref: '#/definitions/gatewayUserLoginRespUserInfo'
+      token:
+        type: string
+  gatewayUserLoginRespUserInfo:
+    type: object
+    properties:
+      token:
+        type: string
+      userId:
+        type: string
+      avatar:
+        type: string
+      nickname:
+        type: string
   imChatLog:
     type: object
     properties:
@@ -751,8 +832,19 @@ definitions:
     type: object
     properties:
       userInfo:
-        $ref: '#/definitions/LoginReplyUserInfo'
+        $ref: '#/definitions/userLoginReplyUserInfo'
       token:
+        type: string
+  userLoginReplyUserInfo:
+    type: object
+    properties:
+      token:
+        type: string
+      userId:
+        type: string
+      avatar:
+        type: string
+      nickname:
         type: string
 securityDefinitions:
   TokenAuth:

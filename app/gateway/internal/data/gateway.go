@@ -5,6 +5,8 @@ import (
 	"github.com/jinzhu/copier"
 	imPb "kratos-im/api/im"
 	socialPb "kratos-im/api/social"
+	userPb "kratos-im/api/user"
+	"kratos-im/constants"
 	"kratos-im/model"
 	"strconv"
 
@@ -239,4 +241,23 @@ func (r *gatewayRepo) GetChatLog(ctx context.Context, req *imPb.GetChatLogReq) (
 	}
 
 	return data, nil
+}
+
+// UserLogin 用户登录
+func (r *gatewayRepo) UserLogin(ctx context.Context, data *userPb.LoginRequest) (*userPb.LoginReply, error) {
+	resp, err := r.data.userClient.Login(ctx, data)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+// HSetOnlineUser 缓存在线状态
+func (r *gatewayRepo) HSetOnlineUser(ctx context.Context, userId string, status bool) error {
+	return r.data.rdb.HSet(ctx, constants.OnlineUserKey, userId, status).Err()
+}
+
+// GetOnlineUser 查询在线用户
+func (r *gatewayRepo) GetOnlineUser(ctx context.Context) (map[string]string, error) {
+	return r.data.rdb.HGetAll(ctx, constants.OnlineUserKey).Result()
 }

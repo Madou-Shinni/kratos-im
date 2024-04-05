@@ -29,7 +29,10 @@ const (
 	Gateway_FriendPutInHandle_FullMethodName  = "/api.gateway.Gateway/FriendPutInHandle"
 	Gateway_FriendPutInList_FullMethodName    = "/api.gateway.Gateway/FriendPutInList"
 	Gateway_FriendList_FullMethodName         = "/api.gateway.Gateway/FriendList"
+	Gateway_FriendsOnline_FullMethodName      = "/api.gateway.Gateway/FriendsOnline"
+	Gateway_GroupMembersOnline_FullMethodName = "/api.gateway.Gateway/GroupMembersOnline"
 	Gateway_GetReadChatRecords_FullMethodName = "/api.gateway.Gateway/GetReadChatRecords"
+	Gateway_UserLogin_FullMethodName          = "/api.gateway.Gateway/UserLogin"
 )
 
 // GatewayClient is the client API for Gateway service.
@@ -56,8 +59,14 @@ type GatewayClient interface {
 	FriendPutInList(ctx context.Context, in *FriendPutInListReq, opts ...grpc.CallOption) (*FriendPutInListResp, error)
 	// 好友列表
 	FriendList(ctx context.Context, in *FriendListReq, opts ...grpc.CallOption) (*FriendListResp, error)
+	// 在线好友情况
+	FriendsOnline(ctx context.Context, in *FriendsOnlineReq, opts ...grpc.CallOption) (*FriendsOnlineResp, error)
+	// 在线群成员情况
+	GroupMembersOnline(ctx context.Context, in *GroupMembersOnlineReq, opts ...grpc.CallOption) (*GroupMembersOnlineResp, error)
 	// 获取消息已读记录
 	GetReadChatRecords(ctx context.Context, in *GetReadChatRecordsReq, opts ...grpc.CallOption) (*GetReadChatRecordsResp, error)
+	// 用户登录
+	UserLogin(ctx context.Context, in *UserLoginReq, opts ...grpc.CallOption) (*UserLoginResp, error)
 }
 
 type gatewayClient struct {
@@ -158,9 +167,36 @@ func (c *gatewayClient) FriendList(ctx context.Context, in *FriendListReq, opts 
 	return out, nil
 }
 
+func (c *gatewayClient) FriendsOnline(ctx context.Context, in *FriendsOnlineReq, opts ...grpc.CallOption) (*FriendsOnlineResp, error) {
+	out := new(FriendsOnlineResp)
+	err := c.cc.Invoke(ctx, Gateway_FriendsOnline_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) GroupMembersOnline(ctx context.Context, in *GroupMembersOnlineReq, opts ...grpc.CallOption) (*GroupMembersOnlineResp, error) {
+	out := new(GroupMembersOnlineResp)
+	err := c.cc.Invoke(ctx, Gateway_GroupMembersOnline_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *gatewayClient) GetReadChatRecords(ctx context.Context, in *GetReadChatRecordsReq, opts ...grpc.CallOption) (*GetReadChatRecordsResp, error) {
 	out := new(GetReadChatRecordsResp)
 	err := c.cc.Invoke(ctx, Gateway_GetReadChatRecords_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) UserLogin(ctx context.Context, in *UserLoginReq, opts ...grpc.CallOption) (*UserLoginResp, error) {
+	out := new(UserLoginResp)
+	err := c.cc.Invoke(ctx, Gateway_UserLogin_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -191,8 +227,14 @@ type GatewayServer interface {
 	FriendPutInList(context.Context, *FriendPutInListReq) (*FriendPutInListResp, error)
 	// 好友列表
 	FriendList(context.Context, *FriendListReq) (*FriendListResp, error)
+	// 在线好友情况
+	FriendsOnline(context.Context, *FriendsOnlineReq) (*FriendsOnlineResp, error)
+	// 在线群成员情况
+	GroupMembersOnline(context.Context, *GroupMembersOnlineReq) (*GroupMembersOnlineResp, error)
 	// 获取消息已读记录
 	GetReadChatRecords(context.Context, *GetReadChatRecordsReq) (*GetReadChatRecordsResp, error)
+	// 用户登录
+	UserLogin(context.Context, *UserLoginReq) (*UserLoginResp, error)
 	mustEmbedUnimplementedGatewayServer()
 }
 
@@ -230,8 +272,17 @@ func (UnimplementedGatewayServer) FriendPutInList(context.Context, *FriendPutInL
 func (UnimplementedGatewayServer) FriendList(context.Context, *FriendListReq) (*FriendListResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FriendList not implemented")
 }
+func (UnimplementedGatewayServer) FriendsOnline(context.Context, *FriendsOnlineReq) (*FriendsOnlineResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FriendsOnline not implemented")
+}
+func (UnimplementedGatewayServer) GroupMembersOnline(context.Context, *GroupMembersOnlineReq) (*GroupMembersOnlineResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GroupMembersOnline not implemented")
+}
 func (UnimplementedGatewayServer) GetReadChatRecords(context.Context, *GetReadChatRecordsReq) (*GetReadChatRecordsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReadChatRecords not implemented")
+}
+func (UnimplementedGatewayServer) UserLogin(context.Context, *UserLoginReq) (*UserLoginResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UserLogin not implemented")
 }
 func (UnimplementedGatewayServer) mustEmbedUnimplementedGatewayServer() {}
 
@@ -426,6 +477,42 @@ func _Gateway_FriendList_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Gateway_FriendsOnline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FriendsOnlineReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).FriendsOnline(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_FriendsOnline_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).FriendsOnline(ctx, req.(*FriendsOnlineReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_GroupMembersOnline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GroupMembersOnlineReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).GroupMembersOnline(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_GroupMembersOnline_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).GroupMembersOnline(ctx, req.(*GroupMembersOnlineReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Gateway_GetReadChatRecords_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetReadChatRecordsReq)
 	if err := dec(in); err != nil {
@@ -440,6 +527,24 @@ func _Gateway_GetReadChatRecords_Handler(srv interface{}, ctx context.Context, d
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GatewayServer).GetReadChatRecords(ctx, req.(*GetReadChatRecordsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_UserLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserLoginReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).UserLogin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_UserLogin_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).UserLogin(ctx, req.(*UserLoginReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -492,8 +597,20 @@ var Gateway_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Gateway_FriendList_Handler,
 		},
 		{
+			MethodName: "FriendsOnline",
+			Handler:    _Gateway_FriendsOnline_Handler,
+		},
+		{
+			MethodName: "GroupMembersOnline",
+			Handler:    _Gateway_GroupMembersOnline_Handler,
+		},
+		{
 			MethodName: "GetReadChatRecords",
 			Handler:    _Gateway_GetReadChatRecords_Handler,
+		},
+		{
+			MethodName: "UserLogin",
+			Handler:    _Gateway_UserLogin_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

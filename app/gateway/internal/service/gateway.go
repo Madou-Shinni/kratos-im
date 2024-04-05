@@ -74,3 +74,18 @@ func (s *GatewayService) FriendList(ctx context.Context, req *pb.FriendListReq) 
 func (s *GatewayService) GetReadChatRecords(ctx context.Context, req *pb.GetReadChatRecordsReq) (*pb.GetReadChatRecordsResp, error) {
 	return s.uc.GetReadChatRecords(ctx, req)
 }
+
+// UserLogin 用户登录
+func (s *GatewayService) UserLogin(ctx context.Context, req *pb.UserLoginReq) (*pb.UserLoginResp, error) {
+	return s.uc.UserLogin(ctx, req)
+}
+
+// FriendsOnline 在线好友情况
+func (s *GatewayService) FriendsOnline(ctx context.Context, req *pb.FriendsOnlineReq) (*pb.FriendsOnlineResp, error) {
+	return s.uc.FriendsOnline(ctx, req)
+}
+
+// GroupMembersOnline 在线群成员情况
+func (s *GatewayService) GroupMembersOnline(ctx context.Context, req *pb.GroupMembersOnlineReq) (*pb.GroupMembersOnlineResp, error) {
+	return s.uc.GroupMembersOnline(ctx, req)
+}

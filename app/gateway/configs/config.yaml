@@ -10,5 +10,11 @@ data:
   kafka:
     brokers:
       - 127.0.0.1:9092
+  redis:
+    addr: 127.0.0.1:6379
+    read_timeout: 0.2s
+    write_timeout: 0.2s
+    password: ""
+    db: 0
 auth:
   key: tkP2yq!i=oamTR#oQ:8n

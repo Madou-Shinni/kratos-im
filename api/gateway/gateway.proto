@@ -155,6 +155,30 @@ service Gateway {
     };
   }
 
+  // 在线好友情况
+  rpc FriendsOnline(FriendsOnlineReq) returns (FriendsOnlineResp) {
+    option (google.api.http) = {
+      get: "/friend/online"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "在线好友情况"
+      tags: ["social"]
+    };
+  }
+
+  // 在线群成员情况
+  rpc GroupMembersOnline(GroupMembersOnlineReq) returns (GroupMembersOnlineResp) {
+    option (google.api.http) = {
+      get: "/group/online"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "在线群成员情况"
+      tags: ["social"]
+    };
+  }
+
 //  // 建立会话
 //  rpc SetUpUserConversation(SetUpUserConversationReq) returns(SetUpUserConversationResp) {
 //    option (google.api.http) = {
@@ -216,6 +240,48 @@ service Gateway {
       tags: ["im"]
     };
   }
+
+  // 用户登录
+  rpc UserLogin(UserLoginReq) returns(UserLoginResp) {
+    option (google.api.http) = {
+      post: "/user/login"
+      body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "用户登录"
+      tags: ["user"]
+    };
+  }
+}
+
+message GroupMembersOnlineReq {
+  uint64 group_id = 1;
+}
+
+message GroupMembersOnlineResp {
+  map<string,bool> online_list = 1;
+}
+
+message FriendsOnlineReq {}
+
+message FriendsOnlineResp {
+  map<string,bool> online_list = 1;
+}
+
+message UserLoginReq {
+  string code = 1;
+}
+message UserLoginResp {
+  message UserInfo {
+    string token = 1;
+    string user_id = 2;
+    string avatar = 4;
+    string nickname = 7;
+  }
+
+  UserInfo user_info = 1;
+  string token = 2;
 }
 
 // model

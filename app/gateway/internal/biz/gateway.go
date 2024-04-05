@@ -5,6 +5,7 @@ import (
 	"github.com/jinzhu/copier"
 	v1 "kratos-im/api/gateway"
 	imPb "kratos-im/api/im"
+	userPb "kratos-im/api/user"
 	"kratos-im/common"
 	"kratos-im/constants"
 	"kratos-im/model"
@@ -66,6 +67,9 @@ type GatewayRepo interface {
 	GroupList(ctx context.Context, userId string) ([]*model.Groups, error)
 	GroupUsers(ctx context.Context, groupId uint64) ([]*model.GroupMembers, error)
 	GetChatLog(ctx context.Context, req *imPb.GetChatLogReq) ([]*model.ChatLog, error)
+	UserLogin(ctx context.Context, data *userPb.LoginRequest) (*userPb.LoginReply, error)
+	HSetOnlineUser(ctx context.Context, userId string, status bool) error
+	GetOnlineUser(ctx context.Context) (map[string]string, error)
 }
 
 // GatewayUsecase is a Gateway usecase.
@@ -395,4 +399,95 @@ func (uc *GatewayUsecase) GetReadChatRecords(ctx context.Context, req *v1.GetRea
 		Reads:   reads,
 		UnReads: unReads,
 	}, err
+}
+
+func (uc *GatewayUsecase) UserLogin(ctx context.Context, req *v1.UserLoginReq) (*v1.UserLoginResp, error) {
+	// 用户登录
+	resp, err := uc.repo.UserLogin(ctx, &userPb.LoginRequest{
+		Code: req.Code,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// 缓存登录状态
+	err = uc.repo.HSetOnlineUser(ctx, resp.UserInfo.UserId, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.UserLoginResp{
+		UserInfo: &v1.UserLoginResp_UserInfo{
+			UserId:   resp.UserInfo.UserId,
+			Avatar:   resp.UserInfo.Avatar,
+			Nickname: resp.UserInfo.Nickname,
+		},
+		Token: resp.Token,
+	}, nil
+}
+
+func (uc *GatewayUsecase) FriendsOnline(ctx context.Context, req *v1.FriendsOnlineReq) (*v1.FriendsOnlineResp, error) {
+	// 获取uid
+	uid, err := common.GetUidFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// 查询好友列表
+	list, err := uc.repo.FriendList(ctx, uid)
+	if err != nil {
+		return nil, err
+	}
+
+	if list == nil || len(list) == 0 {
+		return &v1.FriendsOnlineResp{}, nil
+	}
+
+	// 查询在线用户
+	usersOnline, err := uc.repo.GetOnlineUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// 过滤在线好友
+	friendsOnline := make(map[string]bool, len(list))
+	for _, v := range list {
+		if _, ok := usersOnline[v.FriendUid]; ok {
+			friendsOnline[v.FriendUid] = true
+		} else {
+			friendsOnline[v.FriendUid] = false
+		}
+	}
+
+	return &v1.FriendsOnlineResp{OnlineList: friendsOnline}, nil
+}
+
+func (uc *GatewayUsecase) GroupMembersOnline(ctx context.Context, req *v1.GroupMembersOnlineReq) (*v1.GroupMembersOnlineResp, error) {
+	// 查询群成员列表
+	list, err := uc.repo.GroupUsers(ctx, req.GroupId)
+	if err != nil {
+		return nil, err
+	}
+
+	if list == nil || len(list) == 0 {
+		return &v1.GroupMembersOnlineResp{}, nil
+	}
+
+	// 查询在线用户
+	usersOnline, err := uc.repo.GetOnlineUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// 过滤在线群成员
+	membersOnline := make(map[string]bool, len(list))
+	for _, v := range list {
+		if _, ok := usersOnline[v.UserId]; ok {
+			membersOnline[v.UserId] = true
+		} else {
+			membersOnline[v.UserId] = false
+		}
+	}
+
+	return &v1.GroupMembersOnlineResp{OnlineList: membersOnline}, nil
 }

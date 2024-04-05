@@ -37,6 +37,12 @@ func (s *UserService) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Logi
 	}
 	return &pb.LoginReply{
 		Token: data.Token,
+		UserInfo: &pb.LoginReply_UserInfo{
+			Token:    data.Token,
+			UserId:   data.ID,
+			Avatar:   data.Avatar,
+			Nickname: data.Nickname,
+		},
 	}, nil
 }
 
