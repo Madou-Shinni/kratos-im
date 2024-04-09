@@ -77,3 +77,10 @@ func WithConcurrentCount(concurrentCount int) Option {
 		s.concurrentCount = concurrentCount
 	}
 }
+
+// WithMiddleware with middleware.
+func WithMiddleware(middleware ...Middleware) Option {
+	return func(s *Server) {
+		s.middlewares = append(s.middlewares, middleware...)
+	}
+}

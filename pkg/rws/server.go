@@ -34,7 +34,10 @@ func (t AckType) ToString() string {
 
 // Server is a websocket server.
 type Server struct {
+	*http.Server
 	routes            map[string]HandleFunc // 路由
+	unaryInt          Middleware            // 中间件
+	middlewares       []Middleware          // 中间件集合
 	maxConnectionIdle time.Duration         // 最大连接空闲时间
 	addr              string                // websocket server地址
 	patten            string                // websocket connect路由
@@ -70,6 +73,11 @@ func NewServer(opts ...Option) *Server {
 	}
 
 	server.TaskRunner = NewTaskRunner(server.concurrentCount)
+
+	interceptors := server.middlewares
+	if len(interceptors) > 0 {
+		chainUnaryServerInterceptors(server)
+	}
 
 	return server
 }
@@ -252,6 +260,14 @@ func (s *Server) readAck(conn *Conn) {
 	}
 }
 
+func (s *Server) dispatch(conn *Conn, message *Message, handle HandleFunc) {
+	if s.unaryInt == nil {
+		handle(s, conn, *message)
+		return
+	}
+	s.unaryInt(s, conn, *message, handle)
+}
+
 func (s *Server) handleWrite(conn *Conn) {
 	for {
 		select {
@@ -265,7 +281,7 @@ func (s *Server) handleWrite(conn *Conn) {
 				s.SendByConns(&Message{FrameType: FramePing}, conn)
 			case FrameData:
 				if handle, ok := s.routes[message.Method]; ok {
-					handle(s, conn, *message)
+					s.dispatch(conn, message, handle)
 				} else {
 					s.log.Errorf("method not found: %s", message.Method)
 				}
@@ -411,13 +427,18 @@ func (s *Server) wsHandle(w http.ResponseWriter, r *http.Request) {
 
 // Start start the websocket server.
 func (s *Server) Start(ctx context.Context) error {
-	http.HandleFunc(s.patten, s.wsHandle)
 	s.log.Infof("websocket server start at %s", s.addr)
-	return http.ListenAndServe(s.addr, nil)
+	mux := http.NewServeMux()
+	mux.HandleFunc(s.patten, s.wsHandle)
+	s.Server = &http.Server{
+		Addr:    s.addr,
+		Handler: mux,
+	}
+	return s.ListenAndServe()
 }
 
 // Stop stop the websocket server.
-func (s *Server) Stop(_ context.Context) error {
+func (s *Server) Stop(ctx context.Context) error {
 	s.log.Info("websocket server stop")
-	return nil
+	return s.Shutdown(ctx)
 }

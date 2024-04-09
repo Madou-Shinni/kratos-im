@@ -16,6 +16,7 @@ import (
 func NewWebsocketServer(c *conf.Server, auth *conf.Auth, logger log.Logger, s *service.GatewayService) *rws.Server {
 	svr := rws.NewServer(
 		rws.WithAddr(c.Websocket.Addr),
+		rws.WithMiddleware(rws.Recovery()),
 		rws.WithPatten("/ws"),
 		rws.WithLogger(log.NewHelper(log.With(logger, "module", "Websocket/service/websocket-service"))),
 		rws.WithUpgrader(&websocket.Upgrader{}),
