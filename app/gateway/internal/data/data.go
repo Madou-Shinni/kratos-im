@@ -51,7 +51,7 @@ func NewData(c *conf.Data, logger log.Logger, rdb redis.Cmdable, kafkaBroker bro
 
 // NewRedis 初始化redis
 func NewRedis(conf *conf.Data, logger log.Logger) redis.Cmdable {
-	log := log.NewHelper(log.With(logger, "module", "shop-service/data/redis"))
+	log := log.NewHelper(log.With(logger, "module", "gateway-service/data/redis"))
 	client := redis.NewClient(&redis.Options{
 		Addr:         conf.Redis.Addr,
 		Password:     conf.Redis.Password,
