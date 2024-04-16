@@ -31,12 +31,12 @@ func (r *BaseMsgTransfer) Transfer(ctx context.Context, data *rws.Push) error {
 }
 
 func (r *BaseMsgTransfer) sendSingle(data *rws.Push) error {
-	return r.wsClient.Send(rws.Message{
+	return r.wsClient.SendUid(rws.Message{
 		FrameType: rws.FrameData,
 		Method:    "push",
-		FromId:    constants.SystemRootUid,
+		FromId:    constants.RedisKeySystemRootUid,
 		Data:      data,
-	})
+	}, data.RecvId)
 }
 
 func (r *BaseMsgTransfer) sendGroup(data *rws.Push) error {
@@ -60,11 +60,10 @@ func (r *BaseMsgTransfer) sendGroup(data *rws.Push) error {
 	}
 
 	data.RecvIds = uids
-
-	return r.wsClient.Send(rws.Message{
+	return r.wsClient.SendUid(rws.Message{
 		FrameType: rws.FrameData,
 		Method:    "push",
-		FromId:    constants.SystemRootUid,
+		FromId:    constants.RedisKeySystemRootUid,
 		Data:      data,
-	})
+	}, uids...)
 }

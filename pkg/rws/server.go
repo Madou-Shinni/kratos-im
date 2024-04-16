@@ -35,6 +35,7 @@ func (t AckType) ToString() string {
 // Server is a websocket server.
 type Server struct {
 	*http.Server
+	discover          Discover              // 发现
 	routes            map[string]HandleFunc // 路由
 	unaryInt          Middleware            // 中间件
 	middlewares       []Middleware          // 中间件集合
@@ -57,6 +58,7 @@ type Server struct {
 // NewServer creates a new websocket server.
 func NewServer(opts ...Option) *Server {
 	server := &Server{
+		discover:          NewNopDiscover(),
 		routes:            make(map[string]HandleFunc),
 		authentication:    new(DefaultAuthentication),
 		connUserMap:       make(map[*Conn]string),
@@ -78,6 +80,9 @@ func NewServer(opts ...Option) *Server {
 	if len(interceptors) > 0 {
 		chainUnaryServerInterceptors(server)
 	}
+
+	// 存在服务发现，采用分布式im通信的时候; 默认不做任何处理
+	server.discover.Register(fmt.Sprintf("%s", server.addr))
 
 	return server
 }
@@ -113,6 +118,9 @@ func (s *Server) handleConn(conn *Conn) {
 
 	uids := s.GetUsers(conn)
 	conn.Uid = uids[0]
+
+	// 如果存在服务发现则进行注册；默认不做任何处理
+	s.discover.BoundUser(conn.Uid)
 
 	// 处理任务
 	go s.handleWrite(conn)
@@ -152,7 +160,7 @@ func (s *Server) isAck(message *Message) bool {
 	if message == nil {
 		return s.ack != AckTypeNone
 	}
-	return s.ack != AckTypeNone && message.FrameType != FrameAckNone
+	return s.ack != AckTypeNone && message.FrameType != FrameAckNone && message.FrameType != FrameTranspond
 }
 
 func (s *Server) readAck(conn *Conn) {
@@ -285,6 +293,9 @@ func (s *Server) handleWrite(conn *Conn) {
 				} else {
 					s.log.Errorf("method not found: %s", message.Method)
 				}
+			case FrameTranspond:
+				//s.log.Infof("server client list: %v transpond message: %v", s.connUserMap, message)
+				s.SendByUsers(&Message{FrameType: FrameData, Data: message.Data}, message.TranspondUid)
 			}
 			if s.isAck(message) {
 				// 删除队列中的消息
@@ -303,11 +314,12 @@ func (s *Server) GetConn(uid string) *Conn {
 	return s.userConnMap[uid]
 }
 
-func (s *Server) GetConns(uids ...string) []*Conn {
+func (s *Server) GetConns(uids ...string) ([]*Conn, []string) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
 	var res []*Conn
+	var uidsNotExist []string
 	if len(uids) == 0 {
 		// 获取全部
 		res = make([]*Conn, 0, len(s.userConnMap))
@@ -318,11 +330,15 @@ func (s *Server) GetConns(uids ...string) []*Conn {
 		// 获取部分
 		res = make([]*Conn, 0, len(uids))
 		for _, uid := range uids {
+			if _, ok := s.userConnMap[uid]; !ok {
+				uidsNotExist = append(uidsNotExist, uid)
+				continue
+			}
 			res = append(res, s.userConnMap[uid])
 		}
 	}
 
-	return res
+	return res, uidsNotExist
 }
 
 func (s *Server) GetUsers(conns ...*Conn) []string {
@@ -353,7 +369,12 @@ func (s *Server) SendByUsers(msg interface{}, sendIds ...string) error {
 		return nil
 	}
 
-	return s.SendByConns(msg, s.GetConns(sendIds...)...)
+	conns, uids := s.GetConns(sendIds...)
+	// 当前server中的连接直接发送
+	s.SendByConns(msg, conns...)
+
+	// 发现服务中转发送
+	return s.discover.Transpond(msg, uids...)
 }
 
 func (s *Server) SendByConns(msg interface{}, conns ...*Conn) error {
@@ -376,8 +397,6 @@ func (s *Server) SendByConns(msg interface{}, conns ...*Conn) error {
 }
 
 func (s *Server) Close(conn *Conn) {
-	conn.Close()
-
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -387,8 +406,12 @@ func (s *Server) Close(conn *Conn) {
 		return
 	}
 
+	// 解除绑定
+	s.discover.RelieveUser(uid)
+
 	delete(s.connUserMap, conn)
 	delete(s.userConnMap, uid)
+	conn.Close()
 }
 
 func (s *Server) wsHandle(w http.ResponseWriter, r *http.Request) {

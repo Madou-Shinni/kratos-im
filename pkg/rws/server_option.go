@@ -84,3 +84,10 @@ func WithMiddleware(middleware ...Middleware) Option {
 		s.middlewares = append(s.middlewares, middleware...)
 	}
 }
+
+// WithServerDiscover with server discover.
+func WithServerDiscover(discover Discover) Option {
+	return func(opt *Server) {
+		opt.discover = discover
+	}
+}

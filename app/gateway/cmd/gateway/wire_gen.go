@@ -38,7 +38,7 @@ func wireApp(confServer *conf.Server, confData *conf.Data, discovery *conf.Disco
 	gatewayUsecase := biz.NewGatewayUsecase(gatewayRepo, logger)
 	gatewayService := service.NewGatewayService(gatewayUsecase, broker)
 	httpServer := server.NewHTTPServer(confServer, auth, gatewayService, logger)
-	rwsServer := server.NewWebsocketServer(confServer, auth, logger, gatewayService)
+	rwsServer := server.NewWebsocketServer(confServer, auth, confData, logger, gatewayService)
 	registrar := data.NewRegistrar(registry)
 	kratosApp := newApp(logger, httpServer, rwsServer, app, registrar)
 	return kratosApp, func() {

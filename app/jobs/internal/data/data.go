@@ -8,6 +8,7 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/registry"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/redis/go-redis/v9"
 	etcdv3 "go.etcd.io/etcd/client/v3"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -17,6 +18,8 @@ import (
 	"kratos-im/app/jobs/internal/conf"
 	"kratos-im/constants"
 	"kratos-im/pkg/rws"
+	"kratos-im/pkg/tools"
+	"math"
 	"net/http"
 	"time"
 
@@ -134,17 +137,26 @@ func NewRedis(conf *conf.Data, logger log.Logger) redis.Cmdable {
 	return client
 }
 
-func NewWsClient(c *conf.Data, logger log.Logger, rdb redis.Cmdable) (rws.IClient, error) {
+func NewWsClient(c *conf.Data, logger log.Logger, auth *conf.Auth) (rws.IClient, error) {
 	log := log.NewHelper(logger)
 	//1.建立连接
-	token, err := rdb.Get(context.Background(), constants.SystemRootUid).Result()
-	if err != nil {
-		log.Error(err)
-		return nil, err
-	}
+	mp := jwt.MapClaims{constants.CtxUserIDKey: fmt.Sprint("kratos-im:client-discover:", time.Now().UnixMilli())}
+	token, _ := tools.GenToken(mp, math.MaxInt, auth.Key)
 	header := http.Header{}
 	header.Add("Authorization", fmt.Sprint("Bearer ", token))
-	client, err := rws.NewClient(c.Ws.Host, c.Ws.Patten, header)
+	client, err := rws.NewClient(
+		c.Ws.Host,
+		c.Ws.Patten,
+		header,
+		rws.WithClientDiscover(rws.NewRedisDiscover(header, constants.RedisKeyDiscoverSvr, &redis.Options{
+			Addr:         c.Redis.Addr,
+			Password:     c.Redis.Password,
+			ReadTimeout:  c.Redis.ReadTimeout.AsDuration(),
+			WriteTimeout: c.Redis.WriteTimeout.AsDuration(),
+			DialTimeout:  time.Second * 2,
+			PoolSize:     10,
+			DB:           int(c.Redis.Db),
+		})))
 	if err != nil {
 		// 连接失败
 		log.Error(err)

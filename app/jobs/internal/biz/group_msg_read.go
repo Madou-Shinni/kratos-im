@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"github.com/go-kratos/kratos/v2/log"
 	"kratos-im/constants"
 	"kratos-im/pkg/rws"
 	"sync"
@@ -39,6 +40,11 @@ func (g *groupMsgRead) mergePush(push *rws.Push) {
 	defer g.mu.Unlock()
 
 	g.count++
+
+	if g.push == nil {
+		g.push = push
+		return
+	}
 
 	for k, v := range push.ReadRecords {
 		// 消息重复直接替换
@@ -87,6 +93,7 @@ func (g *groupMsgRead) transfer() {
 			g.mu.Lock()
 			if g.count >= groupMsgMergeMaxSize {
 				push := g.push
+				g.pushTime = time.Now()
 				g.push = nil
 				g.count = 0
 				g.mu.Unlock()
@@ -96,6 +103,7 @@ func (g *groupMsgRead) transfer() {
 
 			if g.isIdle() {
 				g.mu.Unlock()
+				log.Info("groupMsgRead transfer idle")
 				// 发送信号让consumerUsecase清理数据
 				g.pushCh <- &rws.Push{
 					ChatType:       constants.ChatTypeGroup,

@@ -2,6 +2,7 @@ package rws
 
 import (
 	"encoding/json"
+	"github.com/go-kratos/kratos/v2/log"
 	"github.com/gorilla/websocket"
 	"net/http"
 	"net/url"
@@ -12,6 +13,8 @@ type IClient interface {
 	Close() error
 	// Send 发送消息
 	Send(v any) error
+	// SendUid 发送消息
+	SendUid(v any, uids ...string) error
 	// Read 接收消息
 	Read(v any) error
 }
@@ -21,14 +24,19 @@ type client struct {
 	host   string
 	patten string
 	header http.Header
+	Discover
 }
 
-func NewClient(host, patten string, header http.Header) (IClient, error) {
+func NewClient(host, patten string, header http.Header, opt ...ClientOption) (IClient, error) {
 	c := &client{
 		Conn:   nil,
 		host:   host,
 		patten: patten,
 		header: header,
+	}
+
+	for _, o := range opt {
+		o(c)
 	}
 
 	conn, err := c.dial()
@@ -62,6 +70,8 @@ func (c *client) Send(v any) error {
 		return nil
 	}
 
+	// 重连
+	log.Errorf("重连 error: %v", err)
 	// 有错误 再增加一个重连发送
 	dial, err := c.dial()
 	if err != nil {
@@ -80,4 +90,11 @@ func (c *client) Read(v any) error {
 	}
 
 	return json.Unmarshal(msg, &v)
+}
+
+func (c *client) SendUid(v any, uids ...string) error {
+	if c.Discover != nil {
+		return c.Discover.Transpond(v, uids...)
+	}
+	return c.Send(v)
 }

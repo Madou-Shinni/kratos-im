@@ -254,12 +254,12 @@ func (r *gatewayRepo) UserLogin(ctx context.Context, data *userPb.LoginRequest) 
 
 // HSetOnlineUser 缓存在线状态
 func (r *gatewayRepo) HSetOnlineUser(ctx context.Context, userId string, status bool) error {
-	return r.data.rdb.HSet(ctx, constants.OnlineUserKey, userId, status).Err()
+	return r.data.rdb.HSet(ctx, constants.RedisKeyOnlineUser, userId, status).Err()
 }
 
 // GetOnlineUser 查询在线用户
 func (r *gatewayRepo) GetOnlineUser(ctx context.Context) (map[string]string, error) {
-	return r.data.rdb.HGetAll(ctx, constants.OnlineUserKey).Result()
+	return r.data.rdb.HGetAll(ctx, constants.RedisKeyOnlineUser).Result()
 }
 
 // GetConversations 获取会话列表

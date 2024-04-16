@@ -24,3 +24,10 @@ func WithClientPatten(patten string) ClientOption {
 		c.patten = patten
 	}
 }
+
+// WithClientDiscover 设置客户端发现
+func WithClientDiscover(discover Discover) ClientOption {
+	return func(opt *client) {
+		opt.Discover = discover
+	}
+}

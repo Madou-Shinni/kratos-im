@@ -55,13 +55,13 @@ func (s *UserService) SetRootToken() error {
 	// 生成jwt token
 	exp := time.Hour * 24 * 365
 	token, err := tools.GenToken(jwt.MapClaims{
-		constants.CtxUserIDKey: constants.SystemRootUid,
+		constants.CtxUserIDKey: constants.RedisKeySystemRootUid,
 	}, exp, s.c.Key)
 	if err != nil {
 		return err
 	}
 	// 保存到redis
-	err = s.rdb.Set(ctx, constants.SystemRootUid, token, -1).Err()
+	err = s.rdb.Set(ctx, constants.RedisKeySystemRootUid, token, -1).Err()
 	if err != nil {
 		return err
 	}

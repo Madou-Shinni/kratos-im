@@ -24,6 +24,8 @@ data:
   ws:
     host: 127.0.0.1:10090
     patten: /ws
+auth:
+  key: tkP2yq!i=oamTR#oQ:8n
 msg_read_handler:
   # 群消息合并配置
   group_msg_merge: true # 是否开启消息合并

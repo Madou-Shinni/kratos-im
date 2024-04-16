@@ -21,7 +21,7 @@ func OnLine(s *service.GatewayService) rws.HandleFunc {
 		// 发送给所有人
 		me := myids[0]
 		for _, uid := range uids {
-			if uid != me && uid != constants.SystemRootUid {
+			if uid != me && uid != constants.RedisKeyOnlineUser {
 				svr.SendByUsers(rws.NewMessage("online", me, uid, me+" 上线啦!"), uids...)
 			}
 		}
@@ -110,7 +110,17 @@ func pushSingle(svr *rws.Server, data rws.Push, recvId string) error {
 	conn := svr.GetConn(recvId)
 	if conn == nil {
 		// 对方不在线
-		return nil
+		return svr.SendByUsers(rws.NewMessage("push", data.SendId, data.RecvId, rws.Chat{
+			ConversationId: data.ConversationId,
+			ChatType:       data.ChatType,
+			SendTime:       data.SendTime,
+			Msg: rws.Msg{
+				MsgId:       data.MsgId,
+				MType:       data.MType,
+				Content:     data.Content,
+				ReadRecords: data.ReadRecords,
+			},
+		}), recvId)
 	}
 	// 发送消息
 	return svr.SendByConns(rws.NewMessage("push", data.SendId, data.RecvId, rws.Chat{

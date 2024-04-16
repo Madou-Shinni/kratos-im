@@ -1,6 +1,7 @@
 package constants
 
 const (
-	SystemRootUid = "kratos-im:root"        // 内部root
-	OnlineUserKey = "kratos-im:online:user" // 在线用户key
+	RedisKeySystemRootUid = "kratos-im:root"        // 内部root
+	RedisKeyOnlineUser    = "kratos-im:online:user" // 在线用户key
+	RedisKeyDiscoverSvr   = "kratos-im:server"      // 服务发现
 )

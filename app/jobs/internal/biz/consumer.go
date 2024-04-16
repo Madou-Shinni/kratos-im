@@ -212,6 +212,7 @@ func (u *ConsumerUsecase) transfer() {
 		u.mu.Lock()
 		if _, ok := u.groupMsgReads[p.ConversationId]; ok && u.groupMsgReads[p.ConversationId].IsIdle() {
 			// 空闲
+			log.Info("groupMsgRead transfer idle clear data")
 			u.groupMsgReads[p.ConversationId].clear()
 			delete(u.groupMsgReads, p.ConversationId)
 		}

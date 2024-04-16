@@ -2,10 +2,15 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/tx7do/kratos-transport/broker"
 	pb "kratos-im/api/gateway"
 	v1 "kratos-im/api/gateway"
 	"kratos-im/app/gateway/internal/biz"
+	"kratos-im/pkg/tools"
+	"math"
+	"time"
 )
 
 // GatewayService is a greeter service.
@@ -108,4 +113,12 @@ func (s *GatewayService) PutConversations(ctx context.Context, req *pb.PutConver
 // SetUpUserConversation 建立会话
 func (s *GatewayService) SetUpUserConversation(ctx context.Context, req *pb.SetUpUserConversationReq) (*pb.SetUpUserConversationResp, error) {
 	return s.uc.SetUpUserConversation(ctx, req)
+}
+
+// GenToken 生成token
+func (s *GatewayService) GenToken(secret string) (string, error) {
+	return tools.GenToken(jwt.MapClaims{
+		"userId": fmt.Sprint("kratos-im:server-discover:", time.Now().UnixMilli()),
+	}, math.MaxInt,
+		secret)
 }
