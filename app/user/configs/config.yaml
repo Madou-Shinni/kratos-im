@@ -22,4 +22,3 @@ oauth2:
   github:
     client_id: yourclientid
     client_secret: yourclientsecret
-    redirect_url: http://localhost:8080/oauth2/github/callback

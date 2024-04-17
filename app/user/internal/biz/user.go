@@ -5,6 +5,7 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"kratos-im/api/errorx"
 	v1 "kratos-im/api/user"
 	"kratos-im/app/user/internal/conf"
 	"kratos-im/constants"
@@ -52,6 +53,9 @@ func (uc *UserUsecase) Login(ctx context.Context, code string) (*LoginResp, erro
 	if err != nil {
 		uc.log.Errorf("tools.LoginGithub(tools.LoginGithubReq{}) err: %v", err)
 		return nil, err
+	}
+	if result.AccessToken == "" {
+		return nil, errorx.ErrorBus("github login failed :%v", code)
 	}
 
 	// 获取用户信息

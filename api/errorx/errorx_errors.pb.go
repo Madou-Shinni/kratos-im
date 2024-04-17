@@ -29,10 +29,10 @@ func IsBus(err error) bool {
 		return false
 	}
 	e := errors.FromError(err)
-	return e.Reason == ErrorReason_BUS.String() && e.Code == 1
+	return e.Reason == ErrorReason_BUS.String() && e.Code == 501
 }
 
 // 为某个枚举单独设置错误码
 func ErrorBus(format string, args ...interface{}) *errors.Error {
-	return errors.New(1, ErrorReason_BUS.String(), fmt.Sprintf(format, args...))
+	return errors.New(501, ErrorReason_BUS.String(), fmt.Sprintf(format, args...))
 }

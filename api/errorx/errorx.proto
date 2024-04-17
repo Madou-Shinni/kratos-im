@@ -15,5 +15,5 @@ enum ErrorReason {
 
   UNKNOWN_ERROR = 0;
   // 为某个枚举单独设置错误码
-  BUS = 1 [(errors.code) = 1]; // 正常业务错误
+  BUS = 1 [(errors.code) = 501]; // 正常业务错误
 }
