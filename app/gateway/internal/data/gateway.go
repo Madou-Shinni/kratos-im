@@ -252,6 +252,15 @@ func (r *gatewayRepo) UserLogin(ctx context.Context, data *userPb.LoginRequest) 
 	return resp, nil
 }
 
+// UserSignUp 用户注册
+func (r *gatewayRepo) UserSignUp(ctx context.Context, data *userPb.Account) error {
+	_, err := r.data.userClient.Register(ctx, data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // HSetOnlineUser 缓存在线状态
 func (r *gatewayRepo) HSetOnlineUser(ctx context.Context, userId string, status bool) error {
 	return r.data.rdb.HSet(ctx, constants.RedisKeyOnlineUser, userId, status).Err()

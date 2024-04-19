@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package api.gateway;
 
+import "user/user.proto";
+import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
@@ -242,7 +244,7 @@ service Gateway {
   }
 
   // 用户登录
-  rpc UserLogin(UserLoginReq) returns(UserLoginResp) {
+  rpc UserLogin(user.LoginRequest) returns(UserLoginResp) {
     option (google.api.http) = {
       post: "/user/login"
       body: "*"
@@ -250,6 +252,19 @@ service Gateway {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       summary: "用户登录"
+      tags: ["user"]
+    };
+  }
+
+  // 用户注册
+  rpc UserSignUp(user.Account) returns(google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/user/signup"
+      body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "用户注册"
       tags: ["user"]
     };
   }
@@ -322,10 +337,6 @@ message FriendsOnlineReq {}
 
 message FriendsOnlineResp {
   map<string,bool> online_list = 1;
-}
-
-message UserLoginReq {
-  string code = 1;
 }
 message UserLoginResp {
   message UserInfo {

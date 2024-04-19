@@ -11,6 +11,8 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
+	user "kratos-im/api/user"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -37,6 +39,7 @@ const (
 	Gateway_GetChatLog_FullMethodName            = "/api.gateway.Gateway/GetChatLog"
 	Gateway_GetReadChatRecords_FullMethodName    = "/api.gateway.Gateway/GetReadChatRecords"
 	Gateway_UserLogin_FullMethodName             = "/api.gateway.Gateway/UserLogin"
+	Gateway_UserSignUp_FullMethodName            = "/api.gateway.Gateway/UserSignUp"
 )
 
 // GatewayClient is the client API for Gateway service.
@@ -78,7 +81,9 @@ type GatewayClient interface {
 	// 获取消息已读记录
 	GetReadChatRecords(ctx context.Context, in *GetReadChatRecordsReq, opts ...grpc.CallOption) (*GetReadChatRecordsResp, error)
 	// 用户登录
-	UserLogin(ctx context.Context, in *UserLoginReq, opts ...grpc.CallOption) (*UserLoginResp, error)
+	UserLogin(ctx context.Context, in *user.LoginRequest, opts ...grpc.CallOption) (*UserLoginResp, error)
+	// 用户注册
+	UserSignUp(ctx context.Context, in *user.Account, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type gatewayClient struct {
@@ -242,9 +247,18 @@ func (c *gatewayClient) GetReadChatRecords(ctx context.Context, in *GetReadChatR
 	return out, nil
 }
 
-func (c *gatewayClient) UserLogin(ctx context.Context, in *UserLoginReq, opts ...grpc.CallOption) (*UserLoginResp, error) {
+func (c *gatewayClient) UserLogin(ctx context.Context, in *user.LoginRequest, opts ...grpc.CallOption) (*UserLoginResp, error) {
 	out := new(UserLoginResp)
 	err := c.cc.Invoke(ctx, Gateway_UserLogin_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) UserSignUp(ctx context.Context, in *user.Account, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, Gateway_UserSignUp_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -290,7 +304,9 @@ type GatewayServer interface {
 	// 获取消息已读记录
 	GetReadChatRecords(context.Context, *GetReadChatRecordsReq) (*GetReadChatRecordsResp, error)
 	// 用户登录
-	UserLogin(context.Context, *UserLoginReq) (*UserLoginResp, error)
+	UserLogin(context.Context, *user.LoginRequest) (*UserLoginResp, error)
+	// 用户注册
+	UserSignUp(context.Context, *user.Account) (*emptypb.Empty, error)
 	mustEmbedUnimplementedGatewayServer()
 }
 
@@ -349,8 +365,11 @@ func (UnimplementedGatewayServer) GetChatLog(context.Context, *GetChatLogReq) (*
 func (UnimplementedGatewayServer) GetReadChatRecords(context.Context, *GetReadChatRecordsReq) (*GetReadChatRecordsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReadChatRecords not implemented")
 }
-func (UnimplementedGatewayServer) UserLogin(context.Context, *UserLoginReq) (*UserLoginResp, error) {
+func (UnimplementedGatewayServer) UserLogin(context.Context, *user.LoginRequest) (*UserLoginResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserLogin not implemented")
+}
+func (UnimplementedGatewayServer) UserSignUp(context.Context, *user.Account) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UserSignUp not implemented")
 }
 func (UnimplementedGatewayServer) mustEmbedUnimplementedGatewayServer() {}
 
@@ -672,7 +691,7 @@ func _Gateway_GetReadChatRecords_Handler(srv interface{}, ctx context.Context, d
 }
 
 func _Gateway_UserLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UserLoginReq)
+	in := new(user.LoginRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -684,7 +703,25 @@ func _Gateway_UserLogin_Handler(srv interface{}, ctx context.Context, dec func(i
 		FullMethod: Gateway_UserLogin_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GatewayServer).UserLogin(ctx, req.(*UserLoginReq))
+		return srv.(GatewayServer).UserLogin(ctx, req.(*user.LoginRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_UserSignUp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(user.Account)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).UserSignUp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_UserSignUp_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).UserSignUp(ctx, req.(*user.Account))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -767,6 +804,10 @@ var Gateway_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UserLogin",
 			Handler:    _Gateway_UserLogin_Handler,
+		},
+		{
+			MethodName: "UserSignUp",
+			Handler:    _Gateway_UserSignUp_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

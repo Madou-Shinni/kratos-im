@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/redis/go-redis/v9"
+	"google.golang.org/protobuf/types/known/emptypb"
 	v1 "kratos-im/api/user"
 	"kratos-im/app/user/internal/biz"
 	"kratos-im/app/user/internal/conf"
@@ -31,7 +32,7 @@ func NewUserService(uc *biz.UserUsecase, c *conf.Auth, rdb redis.Cmdable) *UserS
 }
 
 func (s *UserService) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginReply, error) {
-	data, err := s.uc.Login(ctx, req.Code)
+	data, err := s.uc.Login(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -48,6 +49,14 @@ func (s *UserService) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Logi
 
 func (s *UserService) List(ctx context.Context, req *pb.ListRequest) (*pb.ListResp, error) {
 	return s.uc.ListByIds(ctx, req.Ids)
+}
+
+func (s *UserService) Register(ctx context.Context, in *pb.Account) (*emptypb.Empty, error) {
+	err := s.uc.Register(ctx, in.Account, in.Password)
+	if err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
 }
 
 func (s *UserService) SetRootToken() error {

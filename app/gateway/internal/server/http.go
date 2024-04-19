@@ -18,6 +18,7 @@ func NewWhiteListMatcher() selector.MatchFunc {
 
 	whiteList := make(map[string]struct{})
 	whiteList[v1.OperationGatewayUserLogin] = struct{}{}
+	whiteList[v1.OperationGatewayUserSignUp] = struct{}{}
 	return func(ctx context.Context, operation string) bool {
 		if _, ok := whiteList[operation]; ok {
 			return false

@@ -2,17 +2,38 @@ syntax = "proto3";
 
 package api.user;
 
+import "google/protobuf/empty.proto";
+
 option go_package = "kratos-im/api/user;user";
 option java_multiple_files = true;
 option java_package = "api.user";
 
 service User {
 	rpc Login (LoginRequest) returns (LoginReply);
+	rpc Register (Account) returns (google.protobuf.Empty);
 	rpc List (ListRequest) returns (ListResp);
 }
 
-message LoginRequest {
+message RegisterResp {
+
+}
+
+message Account {
+	string account = 1;
+	string email = 2;
+	string password = 3;
+}
+
+message OauthGithub {
 	string code = 1;
+}
+
+message LoginRequest {
+	int32 type = 1;
+	oneof payload {
+		Account account = 2;
+		OauthGithub github = 3;
+	}
 }
 message LoginReply {
 	message UserInfo {

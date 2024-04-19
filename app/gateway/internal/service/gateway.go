@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/tx7do/kratos-transport/broker"
+	"google.golang.org/protobuf/types/known/emptypb"
 	pb "kratos-im/api/gateway"
 	v1 "kratos-im/api/gateway"
+	"kratos-im/api/user"
 	"kratos-im/app/gateway/internal/biz"
 	"kratos-im/pkg/tools"
 	"math"
@@ -81,8 +83,13 @@ func (s *GatewayService) GetReadChatRecords(ctx context.Context, req *pb.GetRead
 }
 
 // UserLogin 用户登录
-func (s *GatewayService) UserLogin(ctx context.Context, req *pb.UserLoginReq) (*pb.UserLoginResp, error) {
+func (s *GatewayService) UserLogin(ctx context.Context, req *user.LoginRequest) (*pb.UserLoginResp, error) {
 	return s.uc.UserLogin(ctx, req)
+}
+
+// UserSignUp 用户注册
+func (s *GatewayService) UserSignUp(ctx context.Context, req *user.Account) (*emptypb.Empty, error) {
+	return s.uc.UserSignUp(ctx, req)
 }
 
 // FriendsOnline 在线好友情况

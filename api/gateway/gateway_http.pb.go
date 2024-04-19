@@ -10,6 +10,8 @@ import (
 	context "context"
 	http "github.com/go-kratos/kratos/v2/transport/http"
 	binding "github.com/go-kratos/kratos/v2/transport/http/binding"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
+	user "kratos-im/api/user"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -37,6 +39,7 @@ const OperationGatewayGroupUsers = "/api.gateway.Gateway/GroupUsers"
 const OperationGatewayPutConversations = "/api.gateway.Gateway/PutConversations"
 const OperationGatewaySetUpUserConversation = "/api.gateway.Gateway/SetUpUserConversation"
 const OperationGatewayUserLogin = "/api.gateway.Gateway/UserLogin"
+const OperationGatewayUserSignUp = "/api.gateway.Gateway/UserSignUp"
 
 type GatewayHTTPServer interface {
 	// FriendList 好友列表
@@ -74,7 +77,9 @@ type GatewayHTTPServer interface {
 	// SetUpUserConversation 建立会话
 	SetUpUserConversation(context.Context, *SetUpUserConversationReq) (*SetUpUserConversationResp, error)
 	// UserLogin 用户登录
-	UserLogin(context.Context, *UserLoginReq) (*UserLoginResp, error)
+	UserLogin(context.Context, *user.LoginRequest) (*UserLoginResp, error)
+	// UserSignUp 用户注册
+	UserSignUp(context.Context, *user.Account) (*emptypb.Empty, error)
 }
 
 func RegisterGatewayHTTPServer(s *http.Server, srv GatewayHTTPServer) {
@@ -97,6 +102,7 @@ func RegisterGatewayHTTPServer(s *http.Server, srv GatewayHTTPServer) {
 	r.GET("/chat-log/list", _Gateway_GetChatLog0_HTTP_Handler(srv))
 	r.GET("/read-chat-records/list", _Gateway_GetReadChatRecords0_HTTP_Handler(srv))
 	r.POST("/user/login", _Gateway_UserLogin0_HTTP_Handler(srv))
+	r.POST("/user/signup", _Gateway_UserSignUp0_HTTP_Handler(srv))
 }
 
 func _Gateway_GroupCreate0_HTTP_Handler(srv GatewayHTTPServer) func(ctx http.Context) error {
@@ -445,7 +451,7 @@ func _Gateway_GetReadChatRecords0_HTTP_Handler(srv GatewayHTTPServer) func(ctx h
 
 func _Gateway_UserLogin0_HTTP_Handler(srv GatewayHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in UserLoginReq
+		var in user.LoginRequest
 		if err := ctx.Bind(&in); err != nil {
 			return err
 		}
@@ -454,13 +460,35 @@ func _Gateway_UserLogin0_HTTP_Handler(srv GatewayHTTPServer) func(ctx http.Conte
 		}
 		http.SetOperation(ctx, OperationGatewayUserLogin)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.UserLogin(ctx, req.(*UserLoginReq))
+			return srv.UserLogin(ctx, req.(*user.LoginRequest))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
 			return err
 		}
 		reply := out.(*UserLoginResp)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Gateway_UserSignUp0_HTTP_Handler(srv GatewayHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in user.Account
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationGatewayUserSignUp)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.UserSignUp(ctx, req.(*user.Account))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*emptypb.Empty)
 		return ctx.Result(200, reply)
 	}
 }
@@ -483,7 +511,8 @@ type GatewayHTTPClient interface {
 	GroupUsers(ctx context.Context, req *GroupUsersReq, opts ...http.CallOption) (rsp *GroupUsersResp, err error)
 	PutConversations(ctx context.Context, req *PutConversationsReq, opts ...http.CallOption) (rsp *PutConversationsResp, err error)
 	SetUpUserConversation(ctx context.Context, req *SetUpUserConversationReq, opts ...http.CallOption) (rsp *SetUpUserConversationResp, err error)
-	UserLogin(ctx context.Context, req *UserLoginReq, opts ...http.CallOption) (rsp *UserLoginResp, err error)
+	UserLogin(ctx context.Context, req *user.LoginRequest, opts ...http.CallOption) (rsp *UserLoginResp, err error)
+	UserSignUp(ctx context.Context, req *user.Account, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 }
 
 type GatewayHTTPClientImpl struct {
@@ -715,11 +744,24 @@ func (c *GatewayHTTPClientImpl) SetUpUserConversation(ctx context.Context, in *S
 	return &out, err
 }
 
-func (c *GatewayHTTPClientImpl) UserLogin(ctx context.Context, in *UserLoginReq, opts ...http.CallOption) (*UserLoginResp, error) {
+func (c *GatewayHTTPClientImpl) UserLogin(ctx context.Context, in *user.LoginRequest, opts ...http.CallOption) (*UserLoginResp, error) {
 	var out UserLoginResp
 	pattern := "/user/login"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationGatewayUserLogin))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, err
+}
+
+func (c *GatewayHTTPClientImpl) UserSignUp(ctx context.Context, in *user.Account, opts ...http.CallOption) (*emptypb.Empty, error) {
+	var out emptypb.Empty
+	pattern := "/user/signup"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationGatewayUserSignUp))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {

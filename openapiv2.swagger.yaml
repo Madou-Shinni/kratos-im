@@ -373,7 +373,29 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/gatewayUserLoginReq'
+            $ref: '#/definitions/userLoginRequest'
+      tags:
+        - user
+  /user/signup:
+    post:
+      summary: 用户注册
+      operationId: Gateway_UserSignUp
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            type: object
+            properties: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/userAccount'
       tags:
         - user
 definitions:
@@ -960,11 +982,6 @@ definitions:
         type: object
         additionalProperties:
           type: boolean
-  gatewayUserLoginReq:
-    type: object
-    properties:
-      code:
-        type: string
   gatewayUserLoginResp:
     type: object
     properties:
@@ -1013,6 +1030,15 @@ definitions:
         type: object
         additionalProperties:
           $ref: '#/definitions/apisocialGroups'
+  userAccount:
+    type: object
+    properties:
+      account:
+        type: string
+      email:
+        type: string
+      password:
+        type: string
   userListResp:
     type: object
     properties:
@@ -1046,6 +1072,21 @@ definitions:
       avatar:
         type: string
       nickname:
+        type: string
+  userLoginRequest:
+    type: object
+    properties:
+      type:
+        type: integer
+        format: int32
+      account:
+        $ref: '#/definitions/userAccount'
+      github:
+        $ref: '#/definitions/userOauthGithub'
+  userOauthGithub:
+    type: object
+    properties:
+      code:
         type: string
 securityDefinitions:
   TokenAuth:

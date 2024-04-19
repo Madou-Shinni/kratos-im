@@ -3,6 +3,7 @@ package biz
 import (
 	"context"
 	"github.com/jinzhu/copier"
+	"google.golang.org/protobuf/types/known/emptypb"
 	v1 "kratos-im/api/gateway"
 	imPb "kratos-im/api/im"
 	socialPb "kratos-im/api/social"
@@ -75,6 +76,7 @@ type GatewayRepo interface {
 	ListUserByIds(ctx context.Context, ids []string) (*userPb.ListResp, error)
 	ListGroupByIds(ctx context.Context, ids []uint64) (*socialPb.GroupMapResp, error)
 	PutConversations(ctx context.Context, req *imPb.PutConversationsReq) (*imPb.PutConversationsResp, error)
+	UserSignUp(ctx context.Context, data *userPb.Account) error
 }
 
 // GatewayUsecase is a Gateway usecase.
@@ -406,11 +408,10 @@ func (uc *GatewayUsecase) GetReadChatRecords(ctx context.Context, req *v1.GetRea
 	}, err
 }
 
-func (uc *GatewayUsecase) UserLogin(ctx context.Context, req *v1.UserLoginReq) (*v1.UserLoginResp, error) {
+func (uc *GatewayUsecase) UserLogin(ctx context.Context, req *userPb.LoginRequest) (*v1.UserLoginResp, error) {
+	uc.log.Infof("req: type: %v, payload: %v", req.Type, req.Payload)
 	// 用户登录
-	resp, err := uc.repo.UserLogin(ctx, &userPb.LoginRequest{
-		Code: req.Code,
-	})
+	resp, err := uc.repo.UserLogin(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -638,4 +639,13 @@ func (uc *GatewayUsecase) SetUpUserConversation(ctx context.Context, req *v1.Set
 	}
 
 	return &v1.SetUpUserConversationResp{}, nil
+}
+
+func (uc *GatewayUsecase) UserSignUp(ctx context.Context, req *userPb.Account) (*emptypb.Empty, error) {
+	// 用户注册
+	err := uc.repo.UserSignUp(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
 }

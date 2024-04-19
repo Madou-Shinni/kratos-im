@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -19,8 +20,9 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	User_Login_FullMethodName = "/api.user.User/Login"
-	User_List_FullMethodName  = "/api.user.User/List"
+	User_Login_FullMethodName    = "/api.user.User/Login"
+	User_Register_FullMethodName = "/api.user.User/Register"
+	User_List_FullMethodName     = "/api.user.User/List"
 )
 
 // UserClient is the client API for User service.
@@ -28,6 +30,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserClient interface {
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginReply, error)
+	Register(ctx context.Context, in *Account, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResp, error)
 }
 
@@ -48,6 +51,15 @@ func (c *userClient) Login(ctx context.Context, in *LoginRequest, opts ...grpc.C
 	return out, nil
 }
 
+func (c *userClient) Register(ctx context.Context, in *Account, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, User_Register_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userClient) List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResp, error) {
 	out := new(ListResp)
 	err := c.cc.Invoke(ctx, User_List_FullMethodName, in, out, opts...)
@@ -62,6 +74,7 @@ func (c *userClient) List(ctx context.Context, in *ListRequest, opts ...grpc.Cal
 // for forward compatibility
 type UserServer interface {
 	Login(context.Context, *LoginRequest) (*LoginReply, error)
+	Register(context.Context, *Account) (*emptypb.Empty, error)
 	List(context.Context, *ListRequest) (*ListResp, error)
 	mustEmbedUnimplementedUserServer()
 }
@@ -72,6 +85,9 @@ type UnimplementedUserServer struct {
 
 func (UnimplementedUserServer) Login(context.Context, *LoginRequest) (*LoginReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
+}
+func (UnimplementedUserServer) Register(context.Context, *Account) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
 func (UnimplementedUserServer) List(context.Context, *ListRequest) (*ListResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
@@ -107,6 +123,24 @@ func _User_Login_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	return interceptor(ctx, in, info, handler)
 }
 
+func _User_Register_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Account)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServer).Register(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: User_Register_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServer).Register(ctx, req.(*Account))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _User_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListRequest)
 	if err := dec(in); err != nil {
@@ -135,6 +169,10 @@ var User_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Login",
 			Handler:    _User_Login_Handler,
+		},
+		{
+			MethodName: "Register",
+			Handler:    _User_Register_Handler,
 		},
 		{
 			MethodName: "List",

@@ -10,6 +10,8 @@ type User struct {
 	CreatedAt time.Time    `json:"createdAt" form:"createdAt"`     // 创建时间
 	UpdatedAt time.Time    `json:"updatedAt" form:"updatedAt"`     // 修改时间
 	DeletedAt sql.NullTime `gorm:"index" json:"deletedAt" form:"deletedAt"`
+	Account   string       `json:"account" gorm:"column:account" form:"account"`    // 账号
+	Password  string       `json:"password" gorm:"column:password" form:"password"` // 密码
 	Nickname  string       `json:"nickname" gorm:"column:nickname" form:"nickname"` // 昵称
 	Avatar    string       `json:"avatar" gorm:"column:avatar" form:"avatar"`       // 头像
 	Email     string       `json:"email" gorm:"column:email" form:"email"`          // 邮箱

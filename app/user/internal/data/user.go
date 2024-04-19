@@ -47,3 +47,22 @@ func (u userRepo) ListByIds(ctx context.Context, ids []string) ([]*model.User, e
 
 	return users, nil
 }
+
+func (u userRepo) FirstByAccountOrEmail(ctx context.Context, account, email string) (*model.User, error) {
+	var user model.User
+	if account != "" {
+		err := u.data.db.Where("account = ?", account).First(&user).Error
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if email != "" {
+		err := u.data.db.Where("email = ?", email).First(&user).Error
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &user, nil
+}
