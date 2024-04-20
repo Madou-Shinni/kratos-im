@@ -520,7 +520,7 @@ func (uc *GatewayUsecase) GetConversations(ctx context.Context, req *v1.GetConve
 		if v.ChatType == constants.ChatTypeSingle {
 			userIds = append(userIds, v.TargetId)
 		} else {
-			gid, _ := strconv.ParseUint(v.TargetId, 10, 64)
+			gid, _ := strconv.ParseUint(v.ConversationId, 10, 64)
 			groupIds = append(groupIds, gid)
 		}
 	}
@@ -550,7 +550,7 @@ func (uc *GatewayUsecase) GetConversations(ctx context.Context, req *v1.GetConve
 				avatar = user.Avatar
 			}
 		case constants.ChatTypeGroup:
-			tid, _ := strconv.ParseUint(v.TargetId, 10, 64)
+			tid, _ := strconv.ParseUint(v.ConversationId, 10, 64)
 			if group, ok := groupsResp.GroupMap[tid]; ok {
 				nickname = group.Name
 				avatar = group.Icon
