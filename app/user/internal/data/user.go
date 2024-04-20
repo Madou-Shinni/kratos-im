@@ -36,7 +36,7 @@ func (u userRepo) Save(ctx context.Context, user *model.User) (*model.User, erro
 		return nil, err
 	}
 
-	return user, nil
+	return &userInfo, nil
 }
 
 func (u userRepo) ListByIds(ctx context.Context, ids []string) ([]*model.User, error) {

@@ -79,14 +79,14 @@ func (d *redisDiscover) Register(serverAddr string) (err error) {
 func (d *redisDiscover) BoundUser(uid string) (err error) {
 	// 用户绑定
 	ctx := context.Background()
-	exists, err := d.redis.HExists(ctx, d.boundUserKey, uid).Result()
-	if err != nil {
-		return err
-	}
-	if exists {
-		// 存在绑定关系
-		return nil
-	}
+	//exists, err := d.redis.HExists(ctx, d.boundUserKey, uid).Result()
+	//if err != nil {
+	//	return err
+	//}
+	//if exists {
+	//	// 存在绑定关系
+	//	return nil
+	//}
 
 	// 绑定
 	return d.redis.HSet(ctx, d.boundUserKey, uid, d.serverAddr).Err()
