@@ -51,7 +51,7 @@ func NewUserUsecase(repo UserRepo, logger log.Logger, c *conf.Oauth2, cauth *con
 
 	uc.lgstrategy = make(map[constants.LoginType]ILoginStrategy)
 	uc.lgstrategy[constants.LoginTypeAccount] = NewAccountLogin(repo)
-	uc.lgstrategy[constants.LoginTypeGithub] = NewGithubLogin(repo)
+	uc.lgstrategy[constants.LoginTypeGithub] = NewGithubLogin(repo, c)
 
 	return uc
 }

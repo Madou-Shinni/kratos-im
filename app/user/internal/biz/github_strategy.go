@@ -18,8 +18,8 @@ type GithubLogin struct {
 	c    *conf.Oauth2
 }
 
-func NewGithubLogin(repo UserRepo) *GithubLogin {
-	return &GithubLogin{repo: repo}
+func NewGithubLogin(repo UserRepo, oauth2 *conf.Oauth2) *GithubLogin {
+	return &GithubLogin{repo: repo, c: oauth2}
 }
 
 func (s *GithubLogin) Login(ctx context.Context, req *v1.LoginRequest) (*model.User, error) {

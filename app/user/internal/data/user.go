@@ -23,6 +23,7 @@ func NewUserRepo(data *Data, logger log.Logger) biz.UserRepo {
 }
 
 func (u userRepo) Save(ctx context.Context, user *model.User) (*model.User, error) {
+	var userInfo model.User
 	err := u.data.db.Where("github_id = ?", user.GithubId).Attrs(model.User{
 		ID:       user.ID,
 		Nickname: user.Nickname,
@@ -30,7 +31,7 @@ func (u userRepo) Save(ctx context.Context, user *model.User) (*model.User, erro
 		Email:    user.Email,
 		Sex:      user.Sex,
 		GithubId: user.GithubId,
-	}).FirstOrCreate(&user).Error
+	}).FirstOrCreate(&userInfo).Error
 	if err != nil {
 		return nil, err
 	}
